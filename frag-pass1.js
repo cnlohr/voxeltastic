@@ -29,33 +29,27 @@ vec4 lastvox;
 
 vec3 ptr;
 vec3 dir;
-//vec3 CameraOffset;
 vec4 sofarcolor;
 float totaltravel;
+vec3 lastnorm;
 
 vec4  AtCell( vec3 pos )
 {
-	float v = texture2D( geotex, vec2( msize.x * msize.y * pos.x + msize.y * pos.y, msize.z * pos.z ) ).a;
-	return texture2D( dentex, vec2( v*255.5/256.0, 0.0 ) );
+	vec4 v = texture2D( geotex, vec2( msize.x * msize.y * pos.x + msize.y * pos.y, msize.z * pos.z ) );
+	lastnorm = normalize((v.xyz-0.5)*2.0);
+	return texture2D( dentex, vec2( v.a*255.5/256.0, 0.0 ) );
 }
 
 bool already_hit;
-//Texture layout:
-//
-//geotex.r = 0 for empty space (keep tracing) otherwise, check trace in objtex.
-//geotex.g = space compression X
-//geotex.b = space compression Y
-//geotex.a = space compression Z
-//
 
 float scal = 1.0;
 float nscal = 1.0;
 
 void UpdateSoFar()
 {
-	float intensity = lastvox.a / ( 1.0 + 1.73 - Rmindist );
+	float intensity = pow( lastvox.a, 2.73-Rmindist );
 	float qty = (( 1.0 - sofarcolor.a )) * intensity;
-	sofarcolor.rgb += lastvox.rgb * qty * nscal;
+	sofarcolor.rgb += ( dot( lastnorm.xyz, vec3(1.,1.,1.) ) / 2.0 + 1.0 )  * qty* lastvox.rgb;// * qty * dot( lastnorm, -dir );
 	sofarcolor.a += qty;
 }
 
@@ -69,18 +63,12 @@ void TraverseIn( )
 
 	dircomps = -sign( dir );
 
-	//Floor behaves: -0.5 -> -1 / 0.5 -> 0
-	//Frac behaves:  -0.1 -> .9, -0.5 -> .5 / -1 becomes 0
-
-	//while( step < maxsteps && length( ptr )<maxdist )
 	for( int rstep = 0; rstep < maxsteps; rstep++ )
 	{
 
 		//Find the distance to the edges of our local cube.  These
 		//are always positive values from 0 to 1.
 		vec3 nextsteps = fract( ptr * dircomps  ) ;
-
-		//Note: If you wanted to use jumpmaps, you would add it here.
 
 		//Find out how many units the intersection point between us and
 		//the next intersection is in ray space.
@@ -141,8 +129,6 @@ void TraverseIn( )
 		already_hit = true;
 
 	}
-	
-	//ptr = vec3( -5000. );
 }
 
 
@@ -202,6 +188,7 @@ void main()
 	minr -= .005;
 	maxr += .005;
 
+	//If we're inside the cube, we want it to end.
 	if( minr < 0.0 ) minr = 0.0;
 
 	if( minr < maxr )

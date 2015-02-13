@@ -1,9 +1,12 @@
-
+//Size of the game data.
 var MAPX = 64;
 var MAPY = 64;
 var MAPZ = 32;
+var mapfile = "densities.dat";
 
+//Camera Stuff
 var distto = 60;
+
 var rotx, roty;
 var rotspeedx, rotspeedy;
 
@@ -17,26 +20,6 @@ var lastdy = 0;
 
 var actualtime = 0;
 var lastmovetime = 0;
-
-var RFBSubset;
-
-var RFDir;
-
-function UpdateMap()
-{
-	var lastdebug;
-
-	var DoProgressiveSubTex = true;
-
-	lastdebug = [0,0];
-
-	//cwg.gl.flush();
-	//cwg.gl.finish();
-}
-
-
-
-
 
 
 function HSVtoRGB( hue, sat, value )
@@ -103,37 +86,48 @@ function HSVtoRGB( hue, sat, value )
 	return reto;
 }
 
-
-
-//TRICKY! Should we set up a larger buffer, then trace all objects at once?
-function SetupSubsetRT()
+function CellAt( x, y, z )
 {
-	RFBCore = new CNGLCreateRBNode( cwg, "rfb_type" );
-	var rfbTexture = new CNGLCreate2DDataTexture( cwg, "rfb_tex" );
-	myrfb.setup( rfbTexture, 32, 1, cwg.gl.RGBA, cwg.gl.FLOAT  );
-
-	RFDir = new Float32Array( 32*4 );
-	var vpp = 0;
-
-	for( var u = -0.7853975; u+= 0.7853975; u < .8 )
+	if( x < 0 || x >= MAPX || y < 0 || y >= MAPY || z < 0 || z >= MAPZ )
 	{
-		for( var v = 0; v < 6.2; v += 0.7853975 )
-		{
-			//x
-			RFDir[vpp++] = Math.cos( u ) * Math.cos( v );
-			RFDir[vpp++] = Math.cos( u ) * Math.sin( v );
-			RFDir[vpp++] = Math.sin( u );
-			RFDir[vpp++] = 1;
-		}
+		return 0;
+	}
+	return game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+3];
+}
+
+function LoadMap( e, xtreq )
+{
+	var arrayBuffer = xtreq.response; // Note: not oReq.responseText
+	if (!arrayBuffer)
+		return;
+
+
+	var byteArray = new Uint8Array(arrayBuffer);
+	var index = 0;
+	for( var z = 0; z < MAPZ; z++ )
+	for( var y = 0; y < MAPY; y++ )
+	for( var x = 0; x < MAPX; x++ )
+	{
+		var v = byteArray[index++];
+		game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4] = 0;
+		game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+1] = 0;
+		game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+2] = 0;
+		game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+3] = v;
 	}
 
-	//Up and Down
-	RFDir[vpp++] = 0; 	RFDir[vpp++] = 0;	RFDir[vpp++] = 1; 	RFDir[vpp++] = 1;
-	RFDir[vpp++] = 0; 	RFDir[vpp++] = 0;	RFDir[vpp++] =-1; 	RFDir[vpp++] = 1;
-
-	//Spare
-	RFDir[vpp++] = 0; 	RFDir[vpp++] = 0;	RFDir[vpp++] = 1; 	RFDir[vpp++] = 1;
-	RFDir[vpp++] = 0; 	RFDir[vpp++] = 0;	RFDir[vpp++] =-1; 	RFDir[vpp++] = 1;
+	//Calculate the normals.
+	for( var z = 0; z < MAPZ; z++ )
+	for( var y = 0; y < MAPY; y++ )
+	for( var x = 0; x < MAPX; x++ )
+	{
+		var dx = ((CellAt( x+1, y, z ) - CellAt( x-1, y, z )) / 2.0) + 127;
+		var dy = ((CellAt( x, y+1, z ) - CellAt( x, y-1, z )) / 2.0) + 127;
+		var dz = ((CellAt( x, y, z+1 ) - CellAt( x, y, z-1 )) / 2.0) + 127;
+		game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4] = dx;
+		game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+1] = dy;
+		game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+2] = dz;		
+	}
+	game.geotex.create( MAPX*MAPY, MAPZ, game.geotex.data, cwg.gl.RGBA, cwg.gl.UNSIGNED_BYTE );
 
 }
 
@@ -151,9 +145,6 @@ function UpdateMapRandom()
 				game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+1] = (dden > .5 )?Math.random()*255:0; 
 				game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+2] = (dden > .5 )?Math.random()*255:0; 
 				game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+3] = (dden > .5)?dden*255:0;
-
-//				game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+1] = 0;
-//				game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+2] = 0;
 			}
 		}
 	}
@@ -192,9 +183,6 @@ function SetupGame()
 	game.pass1.assets.push( game.dentex );
 
 
-
-
-
 	game.geotex = new CNGLCreate2DDataTexture( cwg, "geotex" );
 	game.geotex.data = new Uint8Array(MAPX * MAPY * MAPZ*4);
 	game.geotex.textureloc = 2;
@@ -220,36 +208,21 @@ function SetupGame()
 
 
 	var xtreq = new XMLHttpRequest;
-	xtreq.open( "get", "densities.dat", true );
+	xtreq.open( "get", mapfile, true );
 	xtreq.responseType = "arraybuffer";
 
 	xtreq.onload = function( e ) {
-		var arrayBuffer = xtreq.response; // Note: not oReq.responseText
-		if (arrayBuffer) {
-			var byteArray = new Uint8Array(arrayBuffer);
-			var index = 0;
-			for( var z = 0; z < MAPZ; z++ )
-			for( var y = 0; y < MAPY; y++ )
-			for( var x = 0; x < MAPX; x++ )
-			{
-				var v = byteArray[index++];
-				game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4] = v;
-				game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+1] = 0;
-				game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+2] = 0;
-				game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+3] = v;
-			}
-			game.geotex.create( MAPX*MAPY, MAPZ, game.geotex.data, cwg.gl.RGBA, cwg.gl.UNSIGNED_BYTE );
-		}
+		LoadMap( e, xtreq );
 	};
 
 	xtreq.send(null);
-
-//	setTimeout( "UpdateMap()", 1000 );
 }
 
 
 function GameUpdate( deltaTime )
 {
+
+	//Most of this is for the camera.
 	var tt = cwg.uniforms["globalinfo"].x += deltaTime;
 	actualtime += tt;
 
@@ -283,6 +256,8 @@ function GameUpdate( deltaTime )
 
 	var mi = Number( mid.value );
 	var mx = Number( mxd.value );
+
+	//Regenerate the dentex every frame.
 
 	for( var x = 0; x < 256; x++ )
 	{

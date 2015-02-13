@@ -4,19 +4,20 @@
  * Copyright (C) 2010-2012, 2015 <>< Charles Lohr
  *    Based off of http://www.khronos.org/webgl/wiki/Tutorial
  *
+ * Portions of code:
+ *    Copyright (C) 2009 Apple Inc. All Rights Reserved.
+ *                  2010 Charles Lohr (Fix Lookat function)
  *
  */
  -->
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>Voxelrific - Volume Raytracing</title>
+<title>Voxeltastic - Volume Raytracing</title>
 
 <script src="J3DIMath.js" type="text/javascript"> </script>
 <script src="CNWebGL.js" > </script>
 <script src="game.js" > </script>
-<script src="CNWebGLUtil.js" > </script>
-
 
 <script>
 
@@ -197,13 +198,11 @@ function fsmm( e )
 function fsmmD( e )
 {
 	LMouseButton( 1 );
-//	console.log( "DOWN" );
 }
 
 function fsmmU( e )
 {
 	LMouseButton( 0 );
-//	console.log("UP");
 }
 
 function pointerlock( lock, element )
@@ -255,8 +254,8 @@ function pointerlock( lock, element )
 <DIV id=te STYLE="position:fixed;top:0px;left:0px;">
 	<div id=tray STYLE="position:fixed;top:1px;left:10px;color:#ffffff;text-shadow: 1px 1px #000000;">
 		<div id="buttons">
-<!--			<INPUT TYPE=SUBMIT onclick="goFullScreen( document.getElementById('te') );" name=fsbtn VALUE="Go Fullscreen"><BR>
-			<INPUT TYPE=SUBMIT onclick="pointerlock( !ispointerlocked, document.getElementById('example') );" name=ptrlok VALUE="Pointer Lock"><BR> -->
+			<INPUT TYPE=SUBMIT onclick="goFullScreen( document.getElementById('te') );" name=fsbtn VALUE="Go Fullscreen">
+			<INPUT TYPE=SUBMIT onclick="pointerlock( !ispointerlocked, document.getElementById('example') );" name=ptrlok VALUE="Pointer Lock">
 			<div id="framerate" STYLE="position:fixed;top:0px;right:3px;"></DIV>
 			<INPUT TYPE=TEXT id="status">
 			MIN:<INPUT TYPE=TEXT id="mindd" VALUE="0" SIZE=3>
@@ -264,7 +263,7 @@ function pointerlock( lock, element )
 		</div>
 	</div>
 	<div id=tray STYLE="position:fixed;bottom:1px;left:10px;color:#ffffff;text-shadow: 1px 1px #000000;">
-		<A HREF=...>Voxelrific on github</A>
+		<A HREF=https://github.com/cnlohr/voxeltastic>Voxeltastic on github</A>
 	</div>
 
 	<canvas id="example" WIDTH="100%">Upgrade your browser, it does not support canvas.</canvas>
