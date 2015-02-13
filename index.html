@@ -57,7 +57,7 @@
 	   	fpscounter = document.getElementById("framerate");
 	
 		cwg = new CNWebGL( c, [ "vNormal", "vColor", "vPosition"], fpscounter );
-		cwg.marginx = 0;
+		cwg.marginx = 110;
 		cwg.marginy = 0;
 		cwg.trace = function( str ) {
 			console.log( str );
@@ -81,10 +81,7 @@
 		var ss = document.getElementById("vshader" );
 		var rt = cwg.root;
 
-		rootperspective = new CNGLCreatePerspectiveNode( cwg, "RootPerspective" );
-		rootperspective.near = 1;
-		rootperspective.far = 400;
-		rootperspective.angle = 45;
+		rootperspective = new CNGLCreateOrthographicNode( cwg, "RootOrtho" );
 		rt.children.push( rootperspective);
 
 		var genericshader = new CNGLCreateShaderAsset( cwg, "genericshader" );
@@ -92,20 +89,6 @@
 		rootperspective.assets.push( genericshader );
 
 		SetupGame();
-
-		cwg.uniforms["at"].x = rootperspective.at[0] = 10;
-		cwg.uniforms["at"].y = rootperspective.at[1] = 10;
-		cwg.uniforms["at"].z = rootperspective.at[2] = 0;
-
-		cwg.uniforms["eye"].x = rootperspective.eye[0] = 20.0;
-		cwg.uniforms["eye"].y = rootperspective.eye[1] = 20.0;
-		cwg.uniforms["eye"].z = rootperspective.eye[2] = 20.0;
-		cwg.uniforms["eye"].w = 1.0;
-
-		cwg.uniforms["up"].x = rootperspective.up[0] = 0;
-		cwg.uniforms["up"].y = rootperspective.up[1] = 0;
-		cwg.uniforms["up"].z = rootperspective.up[2] = 1;
-
 
 		cwg.last_time = new Date();
 
@@ -116,10 +99,6 @@
 			cwg.Draw(); 
 		}, 16);
 
-		c.onmousedown = function ( ev ){
-		}
-		c.onmouseup = function ( ev ){
-		}
     }
 
 
@@ -257,12 +236,31 @@ function pointerlock( lock, element )
 			<INPUT TYPE=SUBMIT onclick="goFullScreen( document.getElementById('te') );" name=fsbtn VALUE="Go Fullscreen">
 			<INPUT TYPE=SUBMIT onclick="pointerlock( !ispointerlocked, document.getElementById('example') );" name=ptrlok VALUE="Pointer Lock">
 			<div id="framerate" STYLE="position:fixed;top:0px;right:3px;"></DIV>
-			<INPUT TYPE=TEXT id="status">
-			CLEAR: <INPUT TYPE=TEXT id="mindd" VALUE="180" SIZE=3>
-			FILLED:<INPUT TYPE=TEXT id="maxdd" VALUE="220" SIZE=3>
+			<INPUT id="status" TYPE=hidden>
 		</div>
 	</div>
-	<div id=tray STYLE="position:fixed;bottom:1px;left:10px;color:#ffffff;text-shadow: 1px 1px #000000;">
+
+	<div STYLE="position:fixed;top:30%;right:12px;color:#ffffff;text-shadow: 1px 1px #000000;">
+			Recolor:<BR><INPUT TYPE=CHECKBOX id="recolor"><BR>
+			Opaque:<BR><INPUT TYPE=TEXT id="maxdd" VALUE="220" SIZE=3><BR>
+			Clear:<BR><INPUT TYPE=TEXT id="mindd" VALUE="180" SIZE=3><BR>
+	</div>
+
+	<div STYLE="position:fixed;top:14px;right:12px;color:#ffffff;text-shadow: 1px 1px #000000;">
+		255<BR>Good signal
+	</div>
+
+
+	<div STYLE="position:fixed;bottom:2px;right:12px;color:#ffffff;text-shadow: 1px 1px #000000;">
+		Bad signal<BR>0
+	</div>
+
+	<div STYLE="position:fixed;top:0;right:0px;color:#ffffff;z-index:-1" HEIGHT="1000">
+		<canvas WIDTH=110 HEIGHT="10" id="colors"></Canvas>
+	</div>
+
+
+	<div STYLE="position:fixed;bottom:1px;left:10px;color:#ffffff;text-shadow: 1px 1px #000000;">
 		<A HREF=https://github.com/cnlohr/voxeltastic>Voxeltastic on github</A>
 	</div>
 

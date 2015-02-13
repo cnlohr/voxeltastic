@@ -20,6 +20,10 @@ var lastdy = 0;
 
 var actualtime = 0;
 var lastmovetime = 0;
+var lastheight = 0;
+var lastmid = 0;
+var lastmxd = 0;
+var lastrec = 0;
 
 
 function HSVtoRGB( hue, sat, value )
@@ -251,28 +255,66 @@ function GameUpdate( deltaTime )
 	cwg.uniforms["aspect"].x = ar*.6;
 	cwg.uniforms["aspect"].y = 0.6;
 
-	var mid = document.getElementById( "mindd" );
-	var mxd = document.getElementById( "maxdd" );
+	var mi = Number( document.getElementById( "mindd" ).value );
+	var mx = Number( document.getElementById( "maxdd" ).value );
+	var rec = document.getElementById( "recolor" ).checked;
 
-	var mi = Number( mid.value );
-	var mx = Number( mxd.value );
-
-	//Regenerate the dentex every frame.
-
-	for( var x = 0; x < 256; x++ )
+	if( lastmid != mi || lastmxd != mx || lastrec != rec || height != lastheight )
 	{
-		var rgb = HSVtoRGB( -x / 270.0, 1, 1 );
-		game.dentex.data[x*4] = rgb.r*255;
-		game.dentex.data[x*4+1] = rgb.g*255;
-		game.dentex.data[x*4+2] = rgb.b*255;
-		var inten = ((x-mi)/(mx-mi));
-		if( inten < 0 ) inten = 0;
-		if( inten > 1 ) inten = 1;
-		game.dentex.data[x*4+3] = inten*255;
+		var colorcanvas = document.getElementById( "colors" );
+		var ctx = colorcanvas.getContext("2d");
+		var height = colorcanvas.height = window.innerHeight;
+		lastheight = height;
+		lastmid = mi;
+		lastmxd = mx;
+		lastrec = rec;	
+
+		//Regenerate the dentex every frame.
+		//This is what recolors the data.
+
+		for( var x = 0; x < 256; x++ )
+		{
+			var rgb;
+			var inten = ((x-mi)/(mx-mi));
+			if( inten < 0 ) inten = 0;
+			if( inten > 1 ) inten = 1;	
+
+			if( rec )
+			{
+				if( (mi-mx)<0 )
+				{
+					rgb = HSVtoRGB( .12-inten*.8*Math.sign((mx-mi)), 1, 1 );
+				}
+				else
+				{
+					rgb = HSVtoRGB( .2-inten*.8*Math.sign((mx-mi)), 1, 1 );
+				}
+			}
+			else
+				rgb = HSVtoRGB( -x / 280.0, 1, 1 );
+
+			rgb.r = Math.floor( rgb.r * 255.9 );
+			rgb.g = Math.floor( rgb.g * 255.9 );
+			rgb.b = Math.floor( rgb.b * 255.9 );
+			game.dentex.data[x*4] = rgb.r;
+			game.dentex.data[x*4+1] = rgb.g;
+			game.dentex.data[x*4+2] = rgb.b;
+			if( inten < 0 ) inten = 0;
+			if( inten > 1 ) inten = 1;
+			game.dentex.data[x*4+3] = inten*255;
+
+
+			rgb.r = Math.floor( rgb.r * inten );
+			rgb.g = Math.floor( rgb.g * inten );
+			rgb.b = Math.floor( rgb.b * inten );
+
+			var tcolor = ["rgb(",rgb.r,",",rgb.g,",",rgb.b,")"].join("")
+			ctx.fillStyle = tcolor;
+			ctx.fillRect(0,(255-x)/256.0*colorcanvas.height,150,colorcanvas.height*1./128.);
+		}
+
+		game.dentex.create( 256, 1, game.dentex.data, cwg.gl.RGBA, cwg.gl.UNSIGNED_BYTE );
 	}
-
-	game.dentex.create( 256, 1, game.dentex.data, cwg.gl.RGBA, cwg.gl.UNSIGNED_BYTE );
-
 }
 
 function LMouseButton( down )
