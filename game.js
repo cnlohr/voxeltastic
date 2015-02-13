@@ -233,8 +233,8 @@ function GameUpdate( deltaTime )
 	rotx += rotspeedx * deltaTime;
 	roty += rotspeedy * deltaTime;
 
-	if( roty > 1.57 ) roty = 1.57;
-	if( roty < -1.57 ) roty = -1.57;
+	if( roty > 1.57 ) { roty = 1.57; rotspeedy*= -1; }
+	if( roty < -1.57 ) { roty = -1.57; rotspeedy*= -1; }
 	if( rotx > 3.14159 ) rotx -= -3.14159*2;
 	if( rotx < -3.14159 ) rotx += 3.14159*2;
 
