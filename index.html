@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<!--
+/*
+ * Copyright (C) 2010-2012, 2015 <>< Charles Lohr
+ *    Based off of http://www.khronos.org/webgl/wiki/Tutorial
+ *
+ *
+ */
+ -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Voxelrific - Volume Raytracing</title>
+
+<script src="J3DIMath.js" type="text/javascript"> </script>
+<script src="CNWebGL.js" > </script>
+<script src="game.js" > </script>
+<script src="CNWebGLUtil.js" > </script>
+
+
+<script>
+
+    width = -1;
+    height = -1;
+
+    frame = 0;
+
+    game = new Object();
+    game.arbitrarytime = 0;
+
+    function update( dtime )
+    {
+		var cvs = document.getElementById( "example" );
+		frame++;
+		game.arbitrarytime += dtime;
+		var sp = cwg.uniforms["sizeprops"];
+		sp.x = cvs.width;
+		sp.y = cvs.height;
+		sp.z = game.arbitrarytime;
+
+		GameUpdate( dtime );
+    }
+
+    function start()
+    {
+		var c = document.getElementById("example");
+
+		// Hook mouse move events
+		c.onmousewheel = zoom_handler;
+		c.addEventListener ("DOMMouseScroll", zoom_handler_ff, false );
+		c.addEventListener( "mousedown", fsmmD, false );
+		c.addEventListener( "mouseup", fsmmU, false );
+		c.addEventListener( "mousemove", fsmm, false );
+
+
+	   	fpscounter = document.getElementById("framerate");
+	
+		cwg = new CNWebGL( c, [ "vNormal", "vColor", "vPosition"], fpscounter );
+		cwg.marginx = 0;
+		cwg.marginy = 0;
+		cwg.trace = function( str ) {
+			console.log( str );
+		}
+		cwg.trace( "Loaded." );
+
+		cwg.uniforms["LightDir"] = new CreateUniformFloat4("LightDir",cwg );
+		cwg.uniforms["LightDir"].x = 0.0;
+		cwg.uniforms["LightDir"].y = -1.0;
+		cwg.uniforms["LightDir"].z = 0.0;
+		cwg.uniforms["LightDir"].w = 0.0;
+
+		cwg.uniforms["sizeprops"] = new CreateUniformFloat4( "sizeprops", cwg );
+		cwg.uniforms["eye"] = new CreateUniformFloat4( "eye", cwg );
+		cwg.uniforms["at"] = new CreateUniformFloat4( "at", cwg );
+		cwg.uniforms["up"] = new CreateUniformFloat4( "up", cwg );
+		cwg.uniforms["aspect"] = new CreateUniformFloat4( "aspect", cwg );
+
+
+
+		var ss = document.getElementById("vshader" );
+		var rt = cwg.root;
+
+		rootperspective = new CNGLCreatePerspectiveNode( cwg, "RootPerspective" );
+		rootperspective.near = 1;
+		rootperspective.far = 400;
+		rootperspective.angle = 45;
+		rt.children.push( rootperspective);
+
+		var genericshader = new CNGLCreateShaderAsset( cwg, "genericshader" );
+		genericshader.loadobjs( "vert.js", "frag.js" );
+		rootperspective.assets.push( genericshader );
+
+		SetupGame();
+
+		cwg.uniforms["at"].x = rootperspective.at[0] = 10;
+		cwg.uniforms["at"].y = rootperspective.at[1] = 10;
+		cwg.uniforms["at"].z = rootperspective.at[2] = 0;
+
+		cwg.uniforms["eye"].x = rootperspective.eye[0] = 20.0;
+		cwg.uniforms["eye"].y = rootperspective.eye[1] = 20.0;
+		cwg.uniforms["eye"].z = rootperspective.eye[2] = 20.0;
+		cwg.uniforms["eye"].w = 1.0;
+
+		cwg.uniforms["up"].x = rootperspective.up[0] = 0;
+		cwg.uniforms["up"].y = rootperspective.up[1] = 0;
+		cwg.uniforms["up"].z = rootperspective.up[2] = 1;
+
+
+		cwg.last_time = new Date();
+
+		setInterval(function() {
+			var this_time = new Date();
+			update((this_time.getTime() - cwg.last_time.getTime())/1000.0);
+			cwg.last_time = this_time;
+			cwg.Draw(); 
+		}, 16);
+
+		c.onmousedown = function ( ev ){
+		}
+		c.onmouseup = function ( ev ){
+		}
+    }
+
+
+
+
+
+
+function keyup( ev )
+{
+}
+
+function keydown( ev )
+{
+}
+
+function goFullScreen( te){
+    if(te.requestFullScreen)
+        te.requestFullScreen();
+    else if(te.webkitRequestFullScreen)
+        te.webkitRequestFullScreen();
+    else if(te.mozRequestFullScreen)
+        te.mozRequestFullScreen();
+}
+
+
+//Pointer locking: http://www.html5rocks.com/en/tutorials/pointerlock/intro/
+
+var ispointerlocked = false;
+
+function LockchangeCallback( j )
+{
+//	console.log( "Changed: " );
+//	console.log( document.mozPointerLockElement );
+	if( document.mozPointerLockElement != null ||
+		document.webkitPointerLockElement != null || 
+		document.PointerLockElement != null )
+	{
+		ispointerlocked = true;
+	} 
+	else
+	{
+		ispointerlocked = false;
+	}
+}
+function zoom_handler( e )
+{	movementW =  e.wheelDelta || e.detail || 0;
+	if( movementW > 0 ) movementW = 1;
+	if( movementW < 0 ) movementW = -1;
+	LMovement( 0, 0, movementW );
+}
+
+function zoom_handler_ff( e )
+{
+	if( e.detail > 0 ) movementW = -1;
+	if( e.detail < 0 ) movementW = 1;
+	LMovement( 0, 0, movementW );
+}
+
+function fsmm( e )
+{
+  var movementX = e.movementX ||
+      e.mozMovementX          ||
+      e.webkitMovementX       ||
+      0,
+  movementY = e.movementY ||
+      e.mozMovementY      ||
+      e.webkitMovementY   ||
+      0;
+	movementW =  e.wheelDelta || e.detail || 0;
+	if( movementW > 0 ) movementW = 1;
+	if( movementW < 0 ) movementW = -1;
+	LMovement( movementX, movementY, movementW );
+
+}
+
+function fsmmD( e )
+{
+	LMouseButton( 1 );
+//	console.log( "DOWN" );
+}
+
+function fsmmU( e )
+{
+	LMouseButton( 0 );
+//	console.log("UP");
+}
+
+function pointerlock( lock, element )
+{
+	// Hook pointer lock state change events
+	document.addEventListener('pointerlockchange', LockchangeCallback, false);
+	document.addEventListener('mozpointerlockchange', LockchangeCallback, false);
+	document.addEventListener('webkitpointerlockchange', LockchangeCallback, false);
+
+
+	//http://www.html5rocks.com/en/tutorials/pointerlock/intro/
+	var havePointerLock = 'pointerLockElement' in document ||
+	    'mozPointerLockElement' in document ||
+	    'webkitPointerLockElement' in document;
+
+	if( !havePointerLock )
+	{
+		console.log( "Does not have pointer lock functionality in this browser.\n" );
+		return;
+	}
+
+	if( lock )
+	{
+		element.requestPointerLock = element.requestPointerLock ||
+				     element.mozRequestPointerLock ||
+				     element.webkitRequestPointerLock;
+		// Ask the browser to lock the pointer
+		element.requestPointerLock();
+		ispointerlocked = true;
+	}
+	else
+	{
+		// Ask the browser to release the pointer
+		document.exitPointerLock = document.exitPointerLock ||
+				   document.mozExitPointerLock ||
+				   document.webkitExitPointerLock;
+		document.exitPointerLock();
+		ispointerlocked = false;
+	}
+}
+
+
+</script>
+</head>
+
+<body onload="start()" onkeydown="keydown(event);" onkeyup="keyup(event);" >
+
+
+<DIV id=te STYLE="position:fixed;top:0px;left:0px;">
+	<div id=tray STYLE="position:fixed;top:1px;left:10px;color:#ffffff;text-shadow: 1px 1px #000000;">
+		<div id="buttons">
+<!--			<INPUT TYPE=SUBMIT onclick="goFullScreen( document.getElementById('te') );" name=fsbtn VALUE="Go Fullscreen"><BR>
+			<INPUT TYPE=SUBMIT onclick="pointerlock( !ispointerlocked, document.getElementById('example') );" name=ptrlok VALUE="Pointer Lock"><BR> -->
+			<div id="framerate" STYLE="position:fixed;top:0px;right:3px;"></DIV>
+			<INPUT TYPE=TEXT id="status">
+			MIN:<INPUT TYPE=TEXT id="mindd" VALUE="0" SIZE=3>
+			MAX:<INPUT TYPE=TEXT id="maxdd" VALUE="255" SIZE=3>
+		</div>
+	</div>
+	<div id=tray STYLE="position:fixed;bottom:1px;left:10px;color:#ffffff;text-shadow: 1px 1px #000000;">
+		<A HREF=...>Voxelrific on github</A>
+	</div>
+
+	<canvas id="example" WIDTH="100%">Upgrade your browser, it does not support canvas.</canvas>
+</DIV>
+
+
+</html>
+
