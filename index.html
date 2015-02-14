@@ -20,7 +20,6 @@
 <script src="game.js" > </script>
 
 <script>
-
     width = -1;
     height = -1;
 
@@ -40,7 +39,19 @@
 		sp.z = game.arbitrarytime;
 
 		GameUpdate( dtime );
+
+		cwg.gl.flush();
+		cwg.gl.finish();
     }
+
+	function animcb( timestamp )
+	{
+		var this_time = new Date();
+		update((this_time.getTime() - cwg.last_time.getTime())/1000.0);
+		cwg.last_time = this_time;
+		cwg.Draw(); 
+		window.requestAnimationFrame(animcb);
+	}
 
     function start()
     {
@@ -92,12 +103,9 @@
 
 		cwg.last_time = new Date();
 
-		setInterval(function() {
-			var this_time = new Date();
-			update((this_time.getTime() - cwg.last_time.getTime())/1000.0);
-			cwg.last_time = this_time;
-			cwg.Draw(); 
-		}, 16);
+//		GoTimeout();
+		window.requestAnimationFrame(animcb);
+
 
     }
 
