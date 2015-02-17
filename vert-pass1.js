@@ -6,7 +6,7 @@ uniform mat4 ModexlViewMatrix;
 uniform mat4 MVPMatrix;
 uniform mat4 NormalMatrix;
 uniform vec4 LightDir;
-
+uniform vec4 stretch;
 uniform vec4 eye;
 uniform vec4 at;
 uniform vec4 up;

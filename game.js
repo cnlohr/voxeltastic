@@ -2,6 +2,12 @@
 var MAPX = 64;
 var MAPY = 64;
 var MAPZ = 32;
+var termx = 64;
+var termy = 64;
+var termz = 32;
+var stretchx = 1;
+var stretchy = 1;
+var stretchz = 1;
 var mapfile = "densities.dat";
 
 //Camera Stuff
@@ -20,6 +26,10 @@ var lastdy = 0;
 
 var actualtime = 0;
 var lastmovetime = 0;
+var lastheight = 0;
+var lastmid = 0;
+var lastmxd = 0;
+var lastrec = 0;
 
 
 function HSVtoRGB( hue, sat, value )
@@ -101,14 +111,15 @@ function LoadMap( e, xtreq )
 	if (!arrayBuffer)
 		return;
 
-
+	console.log( "MX: " + MAPX + " MY: " + MAPY + " MZ: " + MAPZ );
 	var byteArray = new Uint8Array(arrayBuffer);
 	var index = 0;
 	for( var z = 0; z < MAPZ; z++ )
 	for( var y = 0; y < MAPY; y++ )
 	for( var x = 0; x < MAPX; x++ )
 	{
-		var v = byteArray[index++];
+		var v = 0;
+		v = byteArray[index++];
 		game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4] = 0;
 		game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+1] = 0;
 		game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+2] = 0;
@@ -152,6 +163,57 @@ function UpdateMapRandom()
 
 }
 
+function LoadTexMap()
+{
+	game.geotex = new CNGLCreate2DDataTexture( cwg, "geotex" );
+	game.geotex.data = new Uint8Array(MAPX * MAPY * MAPZ*4);
+	game.geotex.textureloc = 2;
+
+	for( var x = 0; x < MAPX; x++ )
+	{
+		for( var y = 0; y < MAPY; y++ )
+		{
+			var z = 0;
+			dden = Math.random();
+
+			game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4] = (dden > .5 )?Math.random()*255:0; 
+			game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+1] = (dden > .5 )?Math.random()*255:0; 
+			game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+2] = (dden > .5 )?Math.random()*255:0; 
+			game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+3] = (dden > .5)?dden*255:0;
+		}
+	}
+
+	game.geotex.create( MAPX*MAPY, MAPZ, game.geotex.data, cwg.gl.RGBA, cwg.gl.UNSIGNED_BYTE );
+	game.pass1.assets.push( game.geotex );
+
+	cwg.uniforms["globalinfo"] = new CreateUniformFloat4( "globalinfo", cwg );
+	cwg.uniforms["delsizes"] = new CreateUniformFloat4( "delsizes", cwg );
+	cwg.uniforms["stretch"] = new CreateUniformFloat4( "stretch", cwg );
+	cwg.uniforms["terms"] = new CreateUniformFloat4( "terms", cwg );
+
+	cwg.uniforms["delsizes"].x = MAPX;
+	cwg.uniforms["delsizes"].y = MAPY;
+	cwg.uniforms["delsizes"].z = MAPZ;
+
+	cwg.uniforms["terms"].x = termx;
+	cwg.uniforms["terms"].y = termy;
+	cwg.uniforms["terms"].z = termz;
+
+	cwg.uniforms["stretch"].x = stretchx;
+	cwg.uniforms["stretch"].y = stretchy;
+	cwg.uniforms["stretch"].z = stretchz;
+
+	var xtreq = new XMLHttpRequest;
+	xtreq.open( "get", mapfile, true );
+	xtreq.responseType = "arraybuffer";
+
+	xtreq.onload = function( e ) {
+		LoadMap( e, xtreq );
+	};
+
+	xtreq.send(null);
+}
+
 function SetupGame()
 {
 	game.pass1 = new CNGLCreateTransformNode( cwg );
@@ -183,36 +245,51 @@ function SetupGame()
 	game.pass1.assets.push( game.dentex );
 
 
-	game.geotex = new CNGLCreate2DDataTexture( cwg, "geotex" );
-	game.geotex.data = new Uint8Array(MAPX * MAPY * MAPZ*4);
-	game.geotex.textureloc = 2;
-
-	for( var x = 0; x < MAPX; x++ )
+	var descriptor = "densities.info";
+	varcc = document.URL.split(	"dataset=" );
+	if( varcc.length > 1 )
 	{
-		for( var y = 0; y < MAPY; y++ )
-		{
-			var z = 0;
-			dden = Math.random();
-
-			game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4] = (dden > .5 )?Math.random()*255:0; 
-			game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+1] = (dden > .5 )?Math.random()*255:0; 
-			game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+2] = (dden > .5 )?Math.random()*255:0; 
-			game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+3] = (dden > .5)?dden*255:0;
-		}
+		descriptor = varcc[1];
 	}
-
-	game.geotex.create( MAPX*MAPY, MAPZ, game.geotex.data, cwg.gl.RGBA, cwg.gl.UNSIGNED_BYTE );
-	game.pass1.assets.push( game.geotex );
-
-	cwg.uniforms["globalinfo"] = new CreateUniformFloat4( "globalinfo", cwg );
-
+	console.log( descriptor );
 
 	var xtreq = new XMLHttpRequest;
-	xtreq.open( "get", mapfile, true );
-	xtreq.responseType = "arraybuffer";
+	xtreq.open( "get", descriptor, true );
 
 	xtreq.onload = function( e ) {
-		LoadMap( e, xtreq );
+		if( !xtreq.responseText ) return;
+		var k = xtreq.responseText;
+		var l = k.split( "\n" )[0];
+		console.log( "Got info: " + l );
+		var spl = l.split( "," );
+		if( spl.length != 7 && spl.length != 10 )
+		{
+			alert( "Warning, file " + descriptor + " is malformatted." );
+		}
+
+		MAPX = Number(spl[0]);
+		MAPY = Number(spl[1]);
+		MAPZ = Number(spl[2]);
+
+		stretchx = Number(spl[3]);
+		stretchy = Number(spl[4]);
+		stretchz = Number(spl[5]);
+
+		termx = MAPX;
+		termy = MAPY;
+		termz = MAPZ;
+		if( spl.length == 10 )
+		{
+			termx = Number(spl[7]);
+			termy = Number(spl[8]);
+			termz = Number(spl[9]);
+		}
+
+		mapfile = spl[6];
+
+		console.log( "MAPX: " + MAPX + " MAPY: "+ MAPY + " MAPZ: " + MAPZ +" MAPFILE: " + mapfile  +";" );
+
+		LoadTexMap();
 	};
 
 	xtreq.send(null);
@@ -229,15 +306,15 @@ function GameUpdate( deltaTime )
 	rotx += rotspeedx * deltaTime;
 	roty += rotspeedy * deltaTime;
 
-	if( roty > 1.57 ) roty = 1.57;
-	if( roty < -1.57 ) roty = -1.57;
+	if( roty > 1.57 ) { roty = 1.57; rotspeedy*= -1; }
+	if( roty < -1.57 ) { roty = -1.57; rotspeedy*= -1; }
 	if( rotx > 3.14159 ) rotx -= -3.14159*2;
 	if( rotx < -3.14159 ) rotx += 3.14159*2;
 
 
-	cwg.uniforms["at"].x = MAPX/2;
-	cwg.uniforms["at"].y = MAPY/2;
-	cwg.uniforms["at"].z = MAPZ/2;
+	cwg.uniforms["at"].x = MAPX*stretchx/2;
+	cwg.uniforms["at"].y = MAPY*stretchy/2;
+	cwg.uniforms["at"].z = MAPZ*stretchz/2;
 
 	cwg.uniforms["eye"].x = Math.cos(rotx)*distto*Math.cos(roty)+cwg.uniforms["at"].x;
 	cwg.uniforms["eye"].y = Math.sin(rotx)*distto*Math.cos(roty)+cwg.uniforms["at"].y;
@@ -251,28 +328,66 @@ function GameUpdate( deltaTime )
 	cwg.uniforms["aspect"].x = ar*.6;
 	cwg.uniforms["aspect"].y = 0.6;
 
-	var mid = document.getElementById( "mindd" );
-	var mxd = document.getElementById( "maxdd" );
+	var mi = Number( document.getElementById( "mindd" ).value );
+	var mx = Number( document.getElementById( "maxdd" ).value );
+	var rec = document.getElementById( "recolor" ).checked;
 
-	var mi = Number( mid.value );
-	var mx = Number( mxd.value );
-
-	//Regenerate the dentex every frame.
-
-	for( var x = 0; x < 256; x++ )
+	if( lastmid != mi || lastmxd != mx || lastrec != rec || height != lastheight )
 	{
-		var rgb = HSVtoRGB( -x / 270.0, 1, 1 );
-		game.dentex.data[x*4] = rgb.r*255;
-		game.dentex.data[x*4+1] = rgb.g*255;
-		game.dentex.data[x*4+2] = rgb.b*255;
-		var inten = ((x-mi)/(mx-mi));
-		if( inten < 0 ) inten = 0;
-		if( inten > 1 ) inten = 1;
-		game.dentex.data[x*4+3] = inten*255;
+		var colorcanvas = document.getElementById( "colors" );
+		var ctx = colorcanvas.getContext("2d");
+		var height = colorcanvas.height = window.innerHeight;
+		lastheight = height;
+		lastmid = mi;
+		lastmxd = mx;
+		lastrec = rec;	
+
+		//Regenerate the dentex every frame.
+		//This is what recolors the data.
+
+		for( var x = 0; x < 256; x++ )
+		{
+			var rgb;
+			var inten = ((x-mi)/(mx-mi));
+			if( inten < 0 ) inten = 0;
+			if( inten > 1 ) inten = 1;	
+
+			if( rec )
+			{
+				if( (mi-mx)<0 )
+				{
+					rgb = HSVtoRGB( .12-inten*.8*Math.sign((mx-mi)), 1, 1 );
+				}
+				else
+				{
+					rgb = HSVtoRGB( .2-inten*.8*Math.sign((mx-mi)), 1, 1 );
+				}
+			}
+			else
+				rgb = HSVtoRGB( -x / 280.0, 1, 1 );
+
+			rgb.r = Math.floor( rgb.r * 255.9 );
+			rgb.g = Math.floor( rgb.g * 255.9 );
+			rgb.b = Math.floor( rgb.b * 255.9 );
+			game.dentex.data[x*4] = rgb.r;
+			game.dentex.data[x*4+1] = rgb.g;
+			game.dentex.data[x*4+2] = rgb.b;
+			if( inten < 0 ) inten = 0;
+			if( inten > 1 ) inten = 1;
+			game.dentex.data[x*4+3] = inten*255;
+
+
+			rgb.r = Math.floor( rgb.r * inten );
+			rgb.g = Math.floor( rgb.g * inten );
+			rgb.b = Math.floor( rgb.b * inten );
+
+			var tcolor = ["rgb(",rgb.r,",",rgb.g,",",rgb.b,")"].join("");
+			ctx.fillStyle = tcolor;
+			ctx.fillRect(0,(255-x)/256.0*colorcanvas.height,150,colorcanvas.height*1./128.);
+		}
+
+		game.dentex.create( 256, 1, game.dentex.data, cwg.gl.RGBA, cwg.gl.UNSIGNED_BYTE );
 	}
-
-	game.dentex.create( 256, 1, game.dentex.data, cwg.gl.RGBA, cwg.gl.UNSIGNED_BYTE );
-
 }
 
 function LMouseButton( down )

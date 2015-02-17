@@ -6,6 +6,7 @@ uniform sampler2D geotex;
 uniform sampler2D dentex;
 
 uniform vec4 globalinfo;
+uniform vec4 terms;
 float Rmindist;
 varying vec3 v_ray;
 float minr, maxr;
@@ -15,12 +16,17 @@ uniform vec4 eye;
 
 vec3 color;
 
-#define DELSIZEX 64.
-#define DELSIZEY 64.
-#define DELSIZEZ 32.
-vec3 msize = vec3( 1./DELSIZEX, 1./DELSIZEY, 1./DELSIZEZ );
+uniform vec4 delsizes;
+uniform vec4 stretch;
+vec3 msize;
+float DELSIZEX;
+float DELSIZEY;
+float DELSIZEZ;
+vec3 delsizescale;
+vec3 delsizescaleinv;
+
 const vec3 lshw = vec3( 0. );
-const int maxsteps = 256;
+const int maxsteps = 512;
 const float maxdist = 10.;
 
 vec3 dircomps;
@@ -47,7 +53,7 @@ float nscal = 1.0;
 
 void UpdateSoFar()
 {
-	float intensity = pow( lastvox.a, 2.73-Rmindist );
+	float intensity = pow( lastvox.a, (2.73-Rmindist) );
 	float qty = (( 1.0 - sofarcolor.a )) * intensity;
 	sofarcolor.rgb += ( dot( lastnorm.xyz, vec3(1.,1.,1.) ) / 2.0 + 1.0 )  * qty* lastvox.rgb;// * qty * dot( lastnorm, -dir );
 	sofarcolor.a += qty;
@@ -81,17 +87,17 @@ void TraverseIn( )
 		if( dists.x < dists.y && dists.x < dists.z )
 		{
 			mindist = dists.x;
-			nscal = 1.0;
+			nscal = stretch.x;
 		}
 		else if( dists.y < dists.z )
 		{
 			mindist = dists.y;
-			nscal = .9;
+			nscal = stretch.y;
 		}
 		else
 		{
 			mindist = dists.z;
-			nscal = .8;
+			nscal = stretch.z;
 		}
 
 		mindist+=.001;
@@ -103,7 +109,7 @@ void TraverseIn( )
 
 		ptr += motion;
 
-		totaltravel += mindist;
+		totaltravel += length(motion*stretch.xyz);
 
 		Rmindist = mindist;
 
@@ -113,13 +119,13 @@ void TraverseIn( )
 		}
 		scal = nscal;
 
-		if( length( ptr - eye.xyz ) > maxr ) break;
+		if( totaltravel > maxr ) break;
 		if( ptr.x < 0.0 ) continue;
 		if( ptr.y < 0.0 ) continue;
 		if( ptr.z < 0.0 ) continue;
-		if( ptr.x >= DELSIZEX ) continue;
-		if( ptr.y >= DELSIZEY ) continue;
-		if( ptr.z >= DELSIZEZ ) continue;
+		if( ptr.x >= delsizes.x ) continue;
+		if( ptr.y >= delsizes.y ) continue;
+		if( ptr.z >= delsizes.z ) continue;
 
 
 		//Load the new voxel
@@ -140,17 +146,17 @@ void Intersect( int axis, float dalong, vec2 minhit, vec2 maxhit )
 	if( axis == 0 )
 	{
 		dist = (dalong-ptr.x)/dir.x;
-		hitplane = ptr.yz + dir.yz * dist;
+		hitplane = (ptr.yz + dir.yz * dist);
 	}
 	else if( axis == 1 )
 	{
 		dist = (dalong-ptr.y)/dir.y;
-		hitplane = ptr.xz + dir.xz * dist;
+		hitplane = (ptr.xz + dir.xz * dist);
 	}
 	else
 	{
 		dist = (dalong-ptr.z)/dir.z;
-		hitplane = ptr.xy + dir.xy * dist;
+		hitplane = (ptr.xy + dir.xy * dist);
 	}
 
 	float hit = 1.0;
@@ -167,26 +173,56 @@ void Intersect( int axis, float dalong, vec2 minhit, vec2 maxhit )
 
 void main()
 {
+	DELSIZEX = delsizes.x;
+	DELSIZEY = delsizes.y;
+	DELSIZEZ = delsizes.z;
+	msize = vec3( 1./DELSIZEX, 1./DELSIZEY, 1./DELSIZEZ );
+
+	delsizescale    = delsizes.xyz / stretch.xyz;
+	delsizescaleinv = delsizes.xyz * stretch.xyz;
+
 	already_hit = false;
 	sofarcolor = vec4( 0.0 );
 
-	ptr = vec3( eye.xyz );
-	dir = normalize(v_ray);
+	ptr = vec3( eye.xyz/stretch.xyz );
+	dir = normalize(v_ray)/stretch.xyz;
 
 	//Tricky: Intersect the bounds of our world.
 
 	minr = 10000.0;
 	maxr = -10000.0;
-	Intersect( 0, 0.0, vec2( 0.0, 0.0 ), vec2( DELSIZEY, DELSIZEZ ) );
-	Intersect( 1, 0.0, vec2( 0.0, 0.0 ), vec2( DELSIZEX, DELSIZEZ ) );
-	Intersect( 2, 0.0, vec2( 0.0, 0.0 ), vec2( DELSIZEX, DELSIZEY ) );
+	Intersect( 0, 0.0, vec2( 0.0, 0.0 ), terms.yz );
+	Intersect( 1, 0.0, vec2( 0.0, 0.0 ), terms.xz );
+	Intersect( 2, 0.0, vec2( 0.0, 0.0 ), terms.xy );
 
-	Intersect( 0, DELSIZEX, vec2( 0.0, 0.0 ), vec2( DELSIZEY, DELSIZEZ ) );
-	Intersect( 1, DELSIZEY, vec2( 0.0, 0.0 ), vec2( DELSIZEX, DELSIZEZ ) );
-	Intersect( 2, DELSIZEZ, vec2( 0.0, 0.0 ), vec2( DELSIZEX, DELSIZEY ) );
+	Intersect( 0, terms.x, vec2( 0.0, 0.0 ), terms.yz );
+	Intersect( 1, terms.y, vec2( 0.0, 0.0 ), terms.xz );
+	Intersect( 2, terms.z, vec2( 0.0, 0.0 ), terms.xy );
 
+
+	float dirdot = dot( normalize(v_ray), stretch.xyz );
+//	float dirdot = 1.0;
+//	maxr *= 100.0;//00.0;
+//	minr = 0.0;
+//	maxr *= 1.+dirdot;
+//	minr *= dirdot;
+
+//	minr *= .5;
+//	maxr *= 10.0;
+//	minr /= dirdot;
+//	minr /= stretch.x*stretch.y*stretch.z;
+//	maxr /= stretch.x*stretch.y*stretch.z;
 	minr -= .005;
 	maxr += .005;
+//	maxr*=1000.0;
+
+
+//	gl_FragColor = vec4( minr/100.0, maxr/100.0, dirdot, 1.0 );
+//	return;
+//	maxr*=10.0;
+
+	ptr = vec3( eye.xyz/stretch.xyz );
+	dir = normalize(v_ray)/stretch.xyz;
 
 	//If we're inside the cube, we want it to end.
 	if( minr < 0.0 ) minr = 0.0;
@@ -194,7 +230,7 @@ void main()
 	if( minr < maxr )
 	{
 
-		ptr += dir * minr;
+		ptr = ptr + dir * minr;//(ptr*stretch.xyz + dir * minr * stretch.xyz)/stretch.xyz;
 		totaltravel = minr;
 
 		TraverseIn();
@@ -204,7 +240,7 @@ void main()
 			UpdateSoFar();
 		}
 	}
-	gl_FragColor = vec4( mix( vec3( .1, .1, .1 ), sofarcolor.rgb, sofarcolor.a ), 1. );
+	gl_FragColor = vec4( mix( vec3( .1, .1, .1 ), sofarcolor.rgb, sofarcolor.a ), 1. ) ;
 
 }
 
