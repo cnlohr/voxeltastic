@@ -6,7 +6,7 @@ uniform mat4 ModexlViewMatrix;
 uniform mat4 MVPMatrix;
 uniform mat4 NormalMatrix;
 uniform vec4 LightDir;
-
+uniform vec4 scale;
 uniform vec4 eye;
 uniform vec4 at;
 uniform vec4 up;
@@ -33,7 +33,6 @@ void main()
 	nup = normalize( nup );
 
 	vpp *= vec4( aspect.xy, 1.0, 1.0 );
-
 	v_ray = fwd + right * vpp.x + nup * vpp.y;
 }
 

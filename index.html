@@ -89,7 +89,7 @@
 		cwg.uniforms["minmax"] = new CreateUniformFloat4( "minmax", cwg );
 		cwg.uniforms["texsize"] = new CreateUniformFloat4( "texsize", cwg );
 		cwg.uniforms["invtexsize"] = new CreateUniformFloat4( "invtexsize", cwg );
-
+		cwg.uniforms["scale"] = new CreateUniformFloat4( "scale", cwg );
 
 
 		var ss = document.getElementById("vshader" );
@@ -278,15 +278,15 @@ function pointerlock( lock, element )
 	<IMG SRC=thumbnail.jpg>
 	</canvas>
 
-	<div style="display:none;position:fixed;top:50%;left: 50%;width:30em;height:22em;margin-top:-11em;margin-left:-15em;border:1px solid #ccc;background-color:#f3f3f3;" id=popover>
+	<div style="display:none;position:fixed;top:50%;left: 50%;width:40em;height:22em;margin-top:-11em;margin-left:-20em;border:1px solid #ccc;background-color:#f3f3f3;" id=popover>
 		WARNING: Though we do not intentionally send data to server, that does not mean something nefarious is not happening.  Do not load HIPPA protected or confidental data in this interface.
 		<BR><BR>
 		Data format of file is solid-packed byte array.
 		<TABLE>
-		<TR><TD>X Size of data:</TD><TD><INPUT type=number id=smapx></TD></TR>
-		<TR><TD>Y Size of data:</TD><TD><INPUT type=number id=smapy></TD></TR>
-		<TR><TD>Z Size of data:</TD><TD><INPUT type=number id=smapz></TD></TR>
-		<TR><TD>Is an RGBA map:</TD><TD><INPUT type=checkbox id=isrgba></TD></TR>
+		<TR><TD>X Size of data:</TD><TD><INPUT type=number id=smapx></TD><TD>SX:</TD><TD><INPUT type=number id=scalex value=1></TD></TR>
+		<TR><TD>Y Size of data:</TD><TD><INPUT type=number id=smapy></TD><TD>SY:</TD><TD><INPUT type=number id=scaley value=1></TD></TR>
+		<TR><TD>Z Size of data:</TD><TD><INPUT type=number id=smapz></TD><TD>SZ:</TD><TD><INPUT type=number id=scalez value=1></TD></TR>
+		<TR><TD>Is an RGBA map:</TD><TD><INPUT type=checkbox id=isrgba></TD><TD>FlipXZ:</TD><TD><INPUT type=checkbox id=flipxz></TD></TR>
 		<TR><TD>Data File</TD><TD><INPUT type=file name=mapdata onchange=pageloadfile(this)></TD></TR>
 		<TR><TD><input type=submit value="Cancel" onclick="document.getElementById('popover').style.display='none';"></TD><TD><div id=fileloadstatus></div></TD></TR>
 		</TABLE>

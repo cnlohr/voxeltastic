@@ -24,6 +24,11 @@ var lastheight = 0;
 var lastmid = 0;
 var lastmxd = 0;
 var lastrec = 0;
+var scalex = 1;
+var scaley = 1;
+var scalez = 1;
+
+var flipxz = false;
 
 var fr;
 
@@ -68,6 +73,10 @@ function pageloadfile( fil )
 	var sx = Number( document.getElementById("smapx").value );
 	var sy = Number( document.getElementById("smapy").value );
 	var sz = Number( document.getElementById("smapz").value );
+	scalex = Number( document.getElementById("scalex").value );
+	scaley = Number( document.getElementById("scaley").value );
+	scalez = Number( document.getElementById("scalez").value );
+	flipxz = document.getElementById("flipxz").checked;
 	var file = fil.files[0];
 	console.log( file );
 	document.getElementById("fileloadstatus").innerHTML = "Loading " + file.name + " / " + sx + ", " + sy + ", " + sz;
@@ -324,17 +333,31 @@ function GameUpdate( deltaTime )
 	if( rotx < -3.14159 ) rotx += 3.14159*2;
 
 
-	cwg.uniforms["at"].x = MAPX/2;
-	cwg.uniforms["at"].y = MAPY/2;
-	cwg.uniforms["at"].z = MAPZ/2;
 
-	cwg.uniforms["eye"].x = Math.cos(rotx)*distto*Math.cos(roty)+cwg.uniforms["at"].x;
-	cwg.uniforms["eye"].y = Math.sin(rotx)*distto*Math.cos(roty)+cwg.uniforms["at"].y;
-	cwg.uniforms["eye"].z = distto*Math.sin(roty)+cwg.uniforms["at"].z;
-
-	cwg.uniforms["up"].x = 0;
-	cwg.uniforms["up"].y = 0;
-	cwg.uniforms["up"].z = 1;
+	if( flipxz )
+	{
+		cwg.uniforms["at"].z = (MAPX*scalex)/2;
+		cwg.uniforms["at"].y = (MAPY*scaley)/2;
+		cwg.uniforms["at"].x = (MAPZ*scalez)/2;
+		cwg.uniforms["eye"].z = Math.cos(rotx)*distto*Math.cos(roty)+cwg.uniforms["at"].x;
+		cwg.uniforms["eye"].y = Math.sin(rotx)*distto*Math.cos(roty)+cwg.uniforms["at"].y;
+		cwg.uniforms["eye"].x = distto*Math.sin(roty)+cwg.uniforms["at"].z;
+		cwg.uniforms["up"].x = 0;
+		cwg.uniforms["up"].y = 1;
+		cwg.uniforms["up"].z = 0;
+	}
+	else
+	{
+		cwg.uniforms["at"].x = (MAPX*scalex)/2;
+		cwg.uniforms["at"].y = (MAPY*scaley)/2;
+		cwg.uniforms["at"].z = (MAPZ*scalez)/2;
+		cwg.uniforms["eye"].x = Math.cos(rotx)*distto*Math.cos(roty)+cwg.uniforms["at"].x;
+		cwg.uniforms["eye"].y = Math.sin(rotx)*distto*Math.cos(roty)+cwg.uniforms["at"].y;
+		cwg.uniforms["eye"].z = distto*Math.sin(roty)+cwg.uniforms["at"].z;
+		cwg.uniforms["up"].x = 0;
+		cwg.uniforms["up"].y = 0;
+		cwg.uniforms["up"].z = 1;
+	}
 
 	var ar = cwg.width/cwg.height;
 	cwg.uniforms["aspect"].x = ar*.6;
@@ -344,9 +367,13 @@ function GameUpdate( deltaTime )
 	cwg.uniforms["invtexsize"].x = 1./MAPX;
 	cwg.uniforms["invtexsize"].y = 1./MAPY;
 	cwg.uniforms["invtexsize"].z = 1./MAPZ;
-	cwg.uniforms["texsize"].x = MAPX;
-	cwg.uniforms["texsize"].y = MAPY;
-	cwg.uniforms["texsize"].z = MAPZ;
+	cwg.uniforms["texsize"].x = MAPX*scalex;
+	cwg.uniforms["texsize"].y = MAPY*scaley;
+	cwg.uniforms["texsize"].z = MAPZ*scalez;
+	cwg.uniforms["scale"].x = scalex;
+	cwg.uniforms["scale"].y = scaley;
+	cwg.uniforms["scale"].z = scalez;
+	cwg.uniforms["scale"].w = flipxz?1.0:0.0;
 
 	var mi = Number( document.getElementById( "mindd" ).value );
 	var mx = Number( document.getElementById( "maxdd" ).value );

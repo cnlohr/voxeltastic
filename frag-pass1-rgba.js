@@ -13,7 +13,7 @@ varying vec2 v_texCoord;
 uniform vec4 eye;
 
 vec3 color;
-
+uniform vec4 scale;
 uniform vec4 invtexsize;
 uniform vec4 texsize;
 const vec3 lshw = vec3( 0. );
@@ -31,6 +31,7 @@ float totaltravel;
 
 vec4  AtCell( vec3 pos )
 {
+	pos /= scale.xyz;
 	vec4 v = texture2D( geotex, vec2( invtexsize.x * invtexsize.y * pos.x + invtexsize.y * pos.y, invtexsize.z * pos.z ) );
 	v.a = (v.a-minmax.x)/(minmax.y - minmax.x);
 	v.a = max(v.a,0.0);

@@ -14,7 +14,7 @@ varying vec2 v_texCoord;
 uniform vec4 eye;
 
 vec3 color;
-
+uniform vec4 scale;
 uniform vec4 texsize;
 uniform vec4 invtexsize;
 const vec3 lshw = vec3( 0. );
@@ -33,6 +33,7 @@ vec3 lastnorm;
 
 vec4  AtCell( vec3 pos )
 {
+	pos /= scale.xyz;
 	vec4 v = texture2D( geotex, vec2( invtexsize.x * invtexsize.y * pos.x + invtexsize.y * pos.y, invtexsize.z * pos.z ) );
 	lastnorm = normalize((v.xyz-0.5)*2.0);
 	return texture2D( dentex, vec2( v.a*255.5/256.0, 0.0 ) );
@@ -175,6 +176,7 @@ void main()
 
 	minr = 10000.0;
 	maxr = -10000.0;
+
 	Intersect( 0, 0.0, vec2( 0.0, 0.0 ), vec2( texsize.y, texsize.z ) );
 	Intersect( 1, 0.0, vec2( 0.0, 0.0 ), vec2( texsize.x, texsize.z ) );
 	Intersect( 2, 0.0, vec2( 0.0, 0.0 ), vec2( texsize.x, texsize.y ) );
