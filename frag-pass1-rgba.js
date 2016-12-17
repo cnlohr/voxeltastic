@@ -3,8 +3,7 @@ precision mediump float;
 #endif
 
 uniform sampler2D geotex;
-uniform sampler2D dentex;
-
+uniform vec4 minmax;
 uniform vec4 globalinfo;
 float Rmindist;
 varying vec3 v_ray;
@@ -15,8 +14,8 @@ uniform vec4 eye;
 
 vec3 color;
 
-uniform vec4 texsize;
 uniform vec4 invtexsize;
+uniform vec4 texsize;
 const vec3 lshw = vec3( 0. );
 const int maxsteps = 256;
 const float maxdist = 10.;
@@ -29,13 +28,13 @@ vec3 ptr;
 vec3 dir;
 vec4 sofarcolor;
 float totaltravel;
-vec3 lastnorm;
 
 vec4  AtCell( vec3 pos )
 {
 	vec4 v = texture2D( geotex, vec2( invtexsize.x * invtexsize.y * pos.x + invtexsize.y * pos.y, invtexsize.z * pos.z ) );
-	lastnorm = normalize((v.xyz-0.5)*2.0);
-	return texture2D( dentex, vec2( v.a*255.5/256.0, 0.0 ) );
+	v.a = (v.a-minmax.x)/(minmax.y - minmax.x);
+	v.a = max(v.a,0.0);
+	return v;
 }
 
 bool already_hit;
@@ -47,7 +46,7 @@ void UpdateSoFar()
 {
 	float intensity = pow( lastvox.a, 2.73-Rmindist );
 	float qty = (( 1.0 - sofarcolor.a )) * intensity;
-	sofarcolor.rgb += ( dot( lastnorm.xyz, vec3(1.,1.,1.) ) / 2.0 + 1.0 )  * qty* lastvox.rgb;// * qty * dot( lastnorm, -dir );
+	sofarcolor.rgb += lastvox.rgb * qty;  // ( dot( lastnorm.xyz, vec3(1.,1.,1.) ) / 2.0 + 1.0 )  * qty * lastvox.rgb;// * qty * dot( lastnorm, -dir );
 	sofarcolor.a += qty;
 }
 

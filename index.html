@@ -86,6 +86,9 @@
 		cwg.uniforms["at"] = new CreateUniformFloat4( "at", cwg );
 		cwg.uniforms["up"] = new CreateUniformFloat4( "up", cwg );
 		cwg.uniforms["aspect"] = new CreateUniformFloat4( "aspect", cwg );
+		cwg.uniforms["minmax"] = new CreateUniformFloat4( "minmax", cwg );
+		cwg.uniforms["texsize"] = new CreateUniformFloat4( "texsize", cwg );
+		cwg.uniforms["invtexsize"] = new CreateUniformFloat4( "invtexsize", cwg );
 
 
 
@@ -237,7 +240,6 @@ function pointerlock( lock, element )
 
 <body onload="start()" onkeydown="keydown(event);" onkeyup="keyup(event);" >
 
-
 <DIV id=te STYLE="position:fixed;top:0px;left:0px;">
 	<div id=tray STYLE="position:fixed;top:1px;left:10px;color:#ffffff;text-shadow: 1px 1px #000000;">
 		<div id="buttons">
@@ -269,12 +271,27 @@ function pointerlock( lock, element )
 
 
 	<div STYLE="position:fixed;bottom:1px;left:10px;color:#ffffff;text-shadow: 1px 1px #000000;">
-		<A HREF=https://github.com/cnlohr/voxeltastic>Voxeltastic on github</A> Confused? <A HREF=https://www.youtube.com/watch?v=aqqEYz38ens>Here's a video explaining what's going on.</A>
+		<A HREF=https://github.com/cnlohr/voxeltastic>Voxeltastic on github</A> Confused? <A HREF=https://www.youtube.com/watch?v=aqqEYz38ens>Here's a video explaining what's going on.</A> Or you can <a href=# onclick="document.getElementById('popover').style.display='block';">Load your own file</a>.
 	</div>
 
 	<canvas id="example" WIDTH="100%">Upgrade your browser, it does not support canvas.
 	<IMG SRC=thumbnail.jpg>
 	</canvas>
+
+	<div style="display:none;position:fixed;top:50%;left: 50%;width:30em;height:22em;margin-top:-11em;margin-left:-15em;border:1px solid #ccc;background-color:#f3f3f3;" id=popover>
+		WARNING: Though we do not intentionally send data to server, that does not mean something nefarious is not happening.  Do not load HIPPA protected or confidental data in this interface.
+		<BR><BR>
+		Data format of file is solid-packed byte array.
+		<TABLE>
+		<TR><TD>X Size of data:</TD><TD><INPUT type=number id=smapx></TD></TR>
+		<TR><TD>Y Size of data:</TD><TD><INPUT type=number id=smapy></TD></TR>
+		<TR><TD>Z Size of data:</TD><TD><INPUT type=number id=smapz></TD></TR>
+		<TR><TD>Is an RGBA map:</TD><TD><INPUT type=checkbox id=isrgba></TD></TR>
+		<TR><TD>Data File</TD><TD><INPUT type=file name=mapdata onchange=pageloadfile(this)></TD></TR>
+		<TR><TD><input type=submit value="Cancel" onclick="document.getElementById('popover').style.display='none';"></TD><TD><div id=fileloadstatus></div></TD></TR>
+		</TABLE>
+	</div>
+
 </DIV>
 
 

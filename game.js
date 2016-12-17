@@ -25,6 +25,73 @@ var lastmid = 0;
 var lastmxd = 0;
 var lastrec = 0;
 
+var fr;
+
+var isrgba = false;
+
+function fileloadblob()
+{
+	var n;
+	var res = fr.result;
+	//document.getElementById("fileloadstatus").innerHTML = "Got " + res.length;
+
+	er = {};
+	er.response = [];
+
+	for (n = 0; n < res.length; ++n) {
+		er.response.push( res.charCodeAt(n) );
+	}
+	for ( ; n < MAPX*MAPY*MAPZ*(isrgba?4:1); ++n) {
+		er.response.push( 0 );
+	}
+	
+	LoadMap( 0, er );
+	document.getElementById('popover').style.display='none';
+
+	var pass1shader = new CNGLCreateShaderAsset( cwg, "pass1shader" );
+	if( isrgba )
+	{
+		pass1shader.loadobjs( "vert-pass1-rgba.js", "frag-pass1-rgba.js" );
+	}
+	else
+	{
+		pass1shader.loadobjs( "vert-pass1.js", "frag-pass1.js" );
+	}
+	console.log( game.pass1.assets );
+	game.pass1.assets[0] = pass1shader;
+
+}
+
+function pageloadfile( fil )
+{
+	console.log( "File change" );
+	var sx = Number( document.getElementById("smapx").value );
+	var sy = Number( document.getElementById("smapy").value );
+	var sz = Number( document.getElementById("smapz").value );
+	var file = fil.files[0];
+	console.log( file );
+	document.getElementById("fileloadstatus").innerHTML = "Loading " + file.name + " / " + sx + ", " + sy + ", " + sz;
+
+	isrgba = document.getElementById("isrgba").checked;
+	console.log( "isrgba: " + isrgba );
+	var exsize = sx * sy * sz * (isrgba?4:1);
+	if( exsize != file.size )
+	{
+		document.getElementById("fileloadstatus").innerHTML = "File length wrong.  Expected " + exsize + " Got " + file.size;
+	}
+	else
+		document.getElementById("fileloadstatus").innerHTML = "Loading.";
+
+
+	MAPX = sx;
+	MAPY = sy;
+	MAPZ = sz;
+
+    fr = new FileReader();
+    fr.onload = fileloadblob;
+    fr.readAsBinaryString(file);
+}
+
 
 function HSVtoRGB( hue, sat, value )
 {
@@ -104,32 +171,50 @@ function LoadMap( e, xtreq )
 	var arrayBuffer = xtreq.response; // Note: not oReq.responseText
 	if (!arrayBuffer)
 		return;
-
-
+	
 	var byteArray = new Uint8Array(arrayBuffer);
-	var index = 0;
-	for( var z = 0; z < MAPZ; z++ )
-	for( var y = 0; y < MAPY; y++ )
-	for( var x = 0; x < MAPX; x++ )
-	{
-		var v = byteArray[index++];
-		game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4] = 0;
-		game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+1] = 0;
-		game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+2] = 0;
-		game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+3] = v;
-	}
 
-	//Calculate the normals.
-	for( var z = 0; z < MAPZ; z++ )
-	for( var y = 0; y < MAPY; y++ )
-	for( var x = 0; x < MAPX; x++ )
+	game.geotex.data = new Uint8Array(MAPX * MAPY * MAPZ*4);
+	
+	if( isrgba )
 	{
-		var dx = ((CellAt( x+1, y, z ) - CellAt( x-1, y, z )) / 2.0) + 127;
-		var dy = ((CellAt( x, y+1, z ) - CellAt( x, y-1, z )) / 2.0) + 127;
-		var dz = ((CellAt( x, y, z+1 ) - CellAt( x, y, z-1 )) / 2.0) + 127;
-		game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4] = dx;
-		game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+1] = dy;
-		game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+2] = dz;		
+		var index = 0;
+		for( var z = 0; z < MAPZ; z++ )
+		for( var y = 0; y < MAPY; y++ )
+		for( var x = 0; x < MAPX; x++ )
+		{
+			game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4] = byteArray[index++];
+			game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+1] = byteArray[index++];
+			game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+2] = byteArray[index++];
+			game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+3] = byteArray[index++];
+		}
+	}
+	else
+	{
+		var index = 0;
+		for( var z = 0; z < MAPZ; z++ )
+		for( var y = 0; y < MAPY; y++ )
+		for( var x = 0; x < MAPX; x++ )
+		{
+			var v = byteArray[index++];
+			game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4] = 0;
+			game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+1] = 0;
+			game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+2] = 0;
+			game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+3] = v;
+		}
+
+		//Calculate the normals.
+		for( var z = 0; z < MAPZ; z++ )
+		for( var y = 0; y < MAPY; y++ )
+		for( var x = 0; x < MAPX; x++ )
+		{
+			var dx = ((CellAt( x+1, y, z ) - CellAt( x-1, y, z )) / 2.0) + 127;
+			var dy = ((CellAt( x, y+1, z ) - CellAt( x, y-1, z )) / 2.0) + 127;
+			var dz = ((CellAt( x, y, z+1 ) - CellAt( x, y, z-1 )) / 2.0) + 127;
+			game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4] = dx;
+			game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+1] = dy;
+			game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+2] = dz;		
+		}
 	}
 	game.geotex.create( MAPX*MAPY, MAPZ, game.geotex.data, cwg.gl.RGBA, cwg.gl.UNSIGNED_BYTE );
 
@@ -254,67 +339,85 @@ function GameUpdate( deltaTime )
 	var ar = cwg.width/cwg.height;
 	cwg.uniforms["aspect"].x = ar*.6;
 	cwg.uniforms["aspect"].y = 0.6;
+	cwg.uniforms["aspect"].z = isrgba?1.0:0.0;
+
+	cwg.uniforms["invtexsize"].x = 1./MAPX;
+	cwg.uniforms["invtexsize"].y = 1./MAPY;
+	cwg.uniforms["invtexsize"].z = 1./MAPZ;
+	cwg.uniforms["texsize"].x = MAPX;
+	cwg.uniforms["texsize"].y = MAPY;
+	cwg.uniforms["texsize"].z = MAPZ;
 
 	var mi = Number( document.getElementById( "mindd" ).value );
 	var mx = Number( document.getElementById( "maxdd" ).value );
 	var rec = document.getElementById( "recolor" ).checked;
 
-	if( lastmid != mi || lastmxd != mx || lastrec != rec || height != lastheight )
+	if( isrgba )
 	{
-		var colorcanvas = document.getElementById( "colors" );
-		var ctx = colorcanvas.getContext("2d");
-		var height = colorcanvas.height = window.innerHeight;
-		lastheight = height;
-		lastmid = mi;
-		lastmxd = mx;
-		lastrec = rec;	
-
-		//Regenerate the dentex every frame.
-		//This is what recolors the data.
-
-		for( var x = 0; x < 256; x++ )
+		cwg.uniforms["minmax"].x = mi/255.0;
+		cwg.uniforms["minmax"].y = mx/255.0;
+		cwg.uniforms["minmax"].z = rec?1.0:0.0;
+	}
+	else
+	{
+		if( lastmid != mi || lastmxd != mx || lastrec != rec || height != lastheight )
 		{
-			var rgb;
-			var inten = ((x-mi)/(mx-mi));
-			if( inten < 0 ) inten = 0;
-			if( inten > 1 ) inten = 1;	
+			var colorcanvas = document.getElementById( "colors" );
+			var ctx = colorcanvas.getContext("2d");
+			var height = colorcanvas.height = window.innerHeight;
+			lastheight = height;
+			lastmid = mi;
+			lastmxd = mx;
+			lastrec = rec;	
 
-			if( rec )
+			//Regenerate the dentex every frame.
+			//This is what recolors the data.
+
+			for( var x = 0; x < 256; x++ )
 			{
-				if( (mi-mx)<0 )
+				var rgb;
+				var inten = ((x-mi)/(mx-mi));
+				if( inten < 0 ) inten = 0;
+				if( inten > 1 ) inten = 1;	
+
+				if( rec )
 				{
-					rgb = HSVtoRGB( .12-inten*.8*Math.sign((mx-mi)), 1, 1 );
+					if( (mi-mx)<0 )
+					{
+						rgb = HSVtoRGB( .12-inten*.8*Math.sign((mx-mi)), 1, 1 );
+					}
+					else
+					{
+						rgb = HSVtoRGB( .2-inten*.8*Math.sign((mx-mi)), 1, 1 );
+					}
 				}
 				else
-				{
-					rgb = HSVtoRGB( .2-inten*.8*Math.sign((mx-mi)), 1, 1 );
-				}
+					rgb = HSVtoRGB( -x / 280.0, 1, 1 );
+
+				rgb.r = Math.floor( rgb.r * 255.9 );
+				rgb.g = Math.floor( rgb.g * 255.9 );
+				rgb.b = Math.floor( rgb.b * 255.9 );
+				game.dentex.data[x*4] = rgb.r;
+				game.dentex.data[x*4+1] = rgb.g;
+				game.dentex.data[x*4+2] = rgb.b;
+				if( inten < 0 ) inten = 0;
+				if( inten > 1 ) inten = 1;
+				game.dentex.data[x*4+3] = inten*255;
+
+
+				rgb.r = Math.floor( rgb.r * inten );
+				rgb.g = Math.floor( rgb.g * inten );
+				rgb.b = Math.floor( rgb.b * inten );
+
+				var tcolor = ["rgb(",rgb.r,",",rgb.g,",",rgb.b,")"].join("")
+				ctx.fillStyle = tcolor;
+				ctx.fillRect(0,(255-x)/256.0*colorcanvas.height,150,colorcanvas.height*1./128.);
 			}
-			else
-				rgb = HSVtoRGB( -x / 280.0, 1, 1 );
 
-			rgb.r = Math.floor( rgb.r * 255.9 );
-			rgb.g = Math.floor( rgb.g * 255.9 );
-			rgb.b = Math.floor( rgb.b * 255.9 );
-			game.dentex.data[x*4] = rgb.r;
-			game.dentex.data[x*4+1] = rgb.g;
-			game.dentex.data[x*4+2] = rgb.b;
-			if( inten < 0 ) inten = 0;
-			if( inten > 1 ) inten = 1;
-			game.dentex.data[x*4+3] = inten*255;
-
-
-			rgb.r = Math.floor( rgb.r * inten );
-			rgb.g = Math.floor( rgb.g * inten );
-			rgb.b = Math.floor( rgb.b * inten );
-
-			var tcolor = ["rgb(",rgb.r,",",rgb.g,",",rgb.b,")"].join("")
-			ctx.fillStyle = tcolor;
-			ctx.fillRect(0,(255-x)/256.0*colorcanvas.height,150,colorcanvas.height*1./128.);
+			game.dentex.create( 256, 1, game.dentex.data, cwg.gl.RGBA, cwg.gl.UNSIGNED_BYTE );
 		}
-
-		game.dentex.create( 256, 1, game.dentex.data, cwg.gl.RGBA, cwg.gl.UNSIGNED_BYTE );
 	}
+	
 }
 
 function LMouseButton( down )

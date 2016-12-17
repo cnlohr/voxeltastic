@@ -8,6 +8,10 @@ The default data set is the wifi signal over a 360mm x 360mm x 180mm area.  The 
 
 You can play with this data set on the URL listed here: https://cnlohr.github.io/voxeltastic/
 
+# Your own data sets!
+
+You can now view your own datasets in-browser.  Simply record your data as a packet binary file, with one-byte intensities, or with 4-byte RGBA bytes.  Note that all edges MUST be powers of two, i.e. a 32x64x128 block solid.
+
 # Structure
 
 Voxeltastic is a few .js files that are either javascript or WebGL shaders.  They are strung together with the index.html and an HTML5 canvas running WebGL to display to you a wonderful raytraced image.  By game.js has its settings at the top and by default, it loads a 64x64x32, 8-bit chunk called densities.dat.  The colors are selected based on the RGBtoHSV function, and the rendering is done on a full-screen quad that's running frag-pass1.js.  The voxel-stepping engine is actually the same one used in my No Euclid! project, found here: https://github.com/cnlohr/noeuclid - Just significantly stripped down.
