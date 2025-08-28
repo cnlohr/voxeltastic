@@ -39,10 +39,11 @@ var fr;
 
 var isrgbav = false;
 
-function fileloadblob()
+function fileload()
 {
 	var n;
-	var res = fr.result;
+	console.log( "fileload()" );
+	var res = new Uint8Array(fr.result);
 	//document.getElementById("fileloadstatus").innerHTML = "Got " + res.length;
 
 	er = {};
@@ -51,13 +52,13 @@ function fileloadblob()
 	if( is16bitv )
 	{
 		for (n = 0; n < res.length; n+=2 ) {
-			er.response.push( res.charCodeAt(n + (is16bitlittleendianv?1:0)) );
+			er.response.push( res[n + (is16bitlittleendianv?1:0)] );
 		}
 	}
 	else
 	{
 		for (n = 0; n < res.length; ++n) {
-			er.response.push( res.charCodeAt(n) );
+			er.response.push( res[charCodeAt(n)] );
 		}
 	}
 	for ( ; n < MAPX*MAPY*MAPZ*(isrgba?4:1)*(is16bitv?2:1); ++n) {
@@ -130,8 +131,8 @@ function pageloadfile( fil )
 	fr.onerror = () => {
 		document.getElementById("fileloadstatus").innerHTML = "Error " + fr.error;
 	};
-    fr.onload = fileloadblob;
-    fr.readAsBinaryString(file);
+    fr.onload = fileload;
+    fr.readAsArrayBuffer(file);
 }
 
 
