@@ -14,13 +14,13 @@ uniform vec4 at;
 uniform vec4 up;
 uniform vec4 aspect;
 
-attribute vec3 vNormal;
-attribute vec4 vTexCoord;
-attribute vec4 vPosition;
+in vec3 vNormal;
+in vec4 vTexCoord;
+in vec4 vPosition;
 
-varying vec2 v_texCoord;
+out vec2 v_texCoord;
 
-varying vec3 v_ray;
+out vec3 v_ray;
 
 void main()
 {
