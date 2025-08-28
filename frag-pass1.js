@@ -4,15 +4,15 @@
 precision mediump float;
 #endif
 
-uniform sampler3D geotex;
-uniform sampler2D dentex;
+uniform highp sampler3D geotex;
+uniform highp sampler2D dentex;
 
 uniform vec4 globalinfo;
 float Rmindist;
-varying vec3 v_ray;
+in highp vec3 v_ray;
 float minr, maxr;
 
-varying vec2 v_texCoord;
+in highp vec2 v_texCoord;
 uniform vec4 eye;
 
 vec3 color;
