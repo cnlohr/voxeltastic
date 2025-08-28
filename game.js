@@ -78,7 +78,7 @@ function fileloadblob()
 	}
 	console.log( game.pass1.assets );
 	game.pass1.assets[0] = pass1shader;
-
+	document.getElementById("fileloadstatus").innerHTML = "Loaded.";
 }
 
 function pageloadfile( fil )
@@ -93,6 +93,8 @@ function pageloadfile( fil )
 
 	maxstepsv = Number( document.getElementById("maxsteps").value );
 	maxdistv = Number( document.getElementById("maxdist").value );
+	cwg.uniforms["stepsdist"].x = maxstepsv;
+	cwg.uniforms["stepsdist"].y = maxdistv;
 
 	flipxzv = document.getElementById("flipxz").checked;
 	is16bitv = document.getElementById("is16bit").checked;
@@ -111,14 +113,14 @@ function pageloadfile( fil )
 	isrgbav = document.getElementById("isrgba").checked;
 	console.log( "isrgba: " + isrgbav );
 	console.log( "is16bit: " + is16bitv );
-	console.log( "is16bitlittlendian: " + is16bitlittlendian );
+	console.log( "is16bitlittlendian: " + is16bitlittlendianv );
 	var exsize = sx * sy * sz * (isrgbav?4:1) * (is16bitv?2:1);
 	if( exsize != file.size )
 	{
 		document.getElementById("fileloadstatus").innerHTML = "File length wrong.  Expected " + exsize + " Got " + file.size;
 	}
 	else
-		document.getElementById("fileloadstatus").innerHTML = "Loading.";
+		document.getElementById("fileloadstatus").innerHTML = "Loading " + file.name;
 
 	MAPX = sx;
 	MAPY = sy;
