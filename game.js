@@ -94,8 +94,6 @@ function pageloadfile( fil )
 	maxstepsv = Number( document.getElementById("maxsteps").value );
 	maxdistv = Number( document.getElementById("maxdist").value );
 
-	actualtime += tt;
-	
 	flipxzv = document.getElementById("flipxz").checked;
 	is16bitv = document.getElementById("is16bit").checked;
 	is16bitlittlendianv = document.getElementById("is16bitlittlendian").checked;
