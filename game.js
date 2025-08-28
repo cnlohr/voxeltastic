@@ -29,6 +29,8 @@ var scaley = 1;
 var scalez = 1;
 
 var flipxz = false;
+var is16bit = false;
+var is16bitlittlendian = false;
 
 var fr;
 
@@ -43,10 +45,19 @@ function fileloadblob()
 	er = {};
 	er.response = [];
 
-	for (n = 0; n < res.length; ++n) {
-		er.response.push( res.charCodeAt(n) );
+	if( is16bit )
+	{
+		for (n = 0; n < res.length; n+=2 ) {
+			er.response.push( res.charCodeAt(n + (is16bitlittleendian?1:0)) );
+		}
 	}
-	for ( ; n < MAPX*MAPY*MAPZ*(isrgba?4:1); ++n) {
+	else
+	{
+		for (n = 0; n < res.length; ++n) {
+			er.response.push( res.charCodeAt(n) );
+		}
+	}
+	for ( ; n < MAPX*MAPY*MAPZ*(isrgba?4:1)*(is16bit?2:1); ++n) {
 		er.response.push( 0 );
 	}
 	
@@ -77,13 +88,22 @@ function pageloadfile( fil )
 	scaley = Number( document.getElementById("scaley").value );
 	scalez = Number( document.getElementById("scalez").value );
 	flipxz = document.getElementById("flipxz").checked;
+	is16bit = document.getElementById("is16bit").checked;
+	is16bitlittlendian = document.getElementById("is16bitlittlendian").checked;
+	
+	if( sx < 1 || sy < 1 || sz < 1 || Math.abs(scalex)<0.000001 || Math.abs(scaley)<0.000001 || Math.abs(scalez)<0.000001 )
+	{
+		document.getElementById("fileloadstatus").innerHTML = "Invalid size/scale";
+		return;
+	}
+	
 	var file = fil.files[0];
 	console.log( file );
 	document.getElementById("fileloadstatus").innerHTML = "Loading " + file.name + " / " + sx + ", " + sy + ", " + sz;
 
 	isrgba = document.getElementById("isrgba").checked;
 	console.log( "isrgba: " + isrgba );
-	var exsize = sx * sy * sz * (isrgba?4:1);
+	var exsize = sx * sy * sz * (isrgba?4:1) * (is16bit?2:1);
 	if( exsize != file.size )
 	{
 		document.getElementById("fileloadstatus").innerHTML = "File length wrong.  Expected " + exsize + " Got " + file.size;
