@@ -28,6 +28,9 @@ var scalexv = 1;
 var scaleyv = 1;
 var scalezv = 1;
 
+var maxstepsv = 256;
+var maxdistv = 10;
+
 var flipxzv = false;
 var is16bitv = false;
 var is16bitlittlendianv = false;
@@ -87,6 +90,13 @@ function pageloadfile( fil )
 	scalexv = Number( document.getElementById("scalex").value );
 	scaleyv = Number( document.getElementById("scaley").value );
 	scalezv = Number( document.getElementById("scalez").value );
+
+	maxstepsv = Number( document.getElementById("maxsteps").value );
+	maxdistv = Number( document.getElementById("maxdist").value );
+	//Most of this is for the camera.
+	var tt = cwg.uniforms["globalinfo"].x += deltaTime;
+	actualtime += tt;
+	
 	flipxzv = document.getElementById("flipxz").checked;
 	is16bitv = document.getElementById("is16bit").checked;
 	is16bitlittlendianv = document.getElementById("is16bitlittlendian").checked;
@@ -248,6 +258,9 @@ function LoadMap( e, xtreq )
 	}
 	game.geotex.create( MAPX, MAPY, MAPZ, game.geotex.data, cwg.gl.RGBA, cwg.gl.UNSIGNED_BYTE );
 
+	cwg.uniforms["stepsdist"] = new CreateUniformFloat4( "stepsdist", cwg );
+	cwg.uniforms["stepsdist"].x = maxstepsv;
+	cwg.uniforms["stepsdist"].y = maxdistv;
 }
 
 function UpdateMapRandom()
@@ -324,7 +337,7 @@ function SetupGame()
 	game.pass1.assets.push( game.geotex );
 
 	cwg.uniforms["globalinfo"] = new CreateUniformFloat4( "globalinfo", cwg );
-
+	cwg.uniforms["stepsdist"] = new CreateUniformFloat4( "stepsdist", cwg );
 
 	var xtreq = new XMLHttpRequest;
 	xtreq.open( "get", mapfile, true );

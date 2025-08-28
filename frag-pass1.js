@@ -22,8 +22,10 @@ uniform vec4 scale;
 uniform vec4 texsize;
 uniform vec4 invtexsize;
 const vec3 lshw = vec3( 0. );
-const int maxsteps = 256;
-const float maxdist = 10.;
+
+uniform vec4 stepsdist;
+int maxsteps;
+float maxdist;
 
 vec3 dircomps;
 
@@ -170,6 +172,9 @@ void Intersect( int axis, float dalong, vec2 minhit, vec2 maxhit )
 
 void main()
 {
+	maxsteps = stepsdist.x;
+	maxdist = stepsdist.y;
+
 	already_hit = false;
 	sofarcolor = vec4( 0.0 );
 
