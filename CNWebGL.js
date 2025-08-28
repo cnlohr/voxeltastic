@@ -35,7 +35,7 @@
 
 function CNWebGL(canvas, attribs, fpscounter)
 {
-	this.gl = canvas.getContext("experimental-webgl");
+	this.gl = canvas.getContext("webgl2");
 	if (this.gl == null)
 	{
 		alert("No WebGL context in: " + canvas );
