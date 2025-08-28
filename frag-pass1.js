@@ -34,7 +34,7 @@ vec3 lastnorm;
 vec4  AtCell( vec3 pos )
 {
 	pos /= scale.xyz;
-	vec4 v = texture2D( geotex, vec2( invtexsize.x * invtexsize.y * pos.x + invtexsize.y * pos.y, invtexsize.z * pos.z ) );
+	vec4 v = texture3D( geotex, vec2( invtexsize.x * pos.x, invtexsize.y * pos.y, invtexsize.z * pos.z ) );
 	lastnorm = normalize((v.xyz-0.5)*2.0);
 	return texture2D( dentex, vec2( v.a*255.5/256.0, 0.0 ) );
 }

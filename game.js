@@ -246,7 +246,7 @@ function LoadMap( e, xtreq )
 			game.geotex.data[(x + y * MAPX + z * MAPX * MAPY)*4+2] = dz;		
 		}
 	}
-	game.geotex.create( MAPX*MAPY, MAPZ, game.geotex.data, cwg.gl.RGBA, cwg.gl.UNSIGNED_BYTE );
+	game.geotex.create( MAPX, MAPY, MAPZ, game.geotex.data, cwg.gl.RGBA, cwg.gl.UNSIGNED_BYTE );
 
 }
 
@@ -267,7 +267,7 @@ function UpdateMapRandom()
 			}
 		}
 	}
-	game.geotex.create( MAPX*MAPY, MAPZ, game.geotex.data, cwg.gl.RGBA, cwg.gl.UNSIGNED_BYTE );
+	game.geotex.create( MAPX, MAPY, MAPZ, game.geotex.data, cwg.gl.RGBA, cwg.gl.UNSIGNED_BYTE );
 
 }
 
@@ -302,7 +302,7 @@ function SetupGame()
 	game.pass1.assets.push( game.dentex );
 
 
-	game.geotex = new CNGLCreate2DDataTexture( cwg, "geotex" );
+	game.geotex = new CNGLCreate3DDataTexture( cwg, "geotex" );
 	game.geotex.data = new Uint8Array(MAPX * MAPY * MAPZ*4);
 	game.geotex.textureloc = 2;
 
@@ -320,7 +320,7 @@ function SetupGame()
 		}
 	}
 
-	game.geotex.create( MAPX*MAPY, MAPZ, game.geotex.data, cwg.gl.RGBA, cwg.gl.UNSIGNED_BYTE );
+	game.geotex.create( MAPX, MAPY, MAPZ, game.geotex.data, cwg.gl.RGBA, cwg.gl.UNSIGNED_BYTE );
 	game.pass1.assets.push( game.geotex );
 
 	cwg.uniforms["globalinfo"] = new CreateUniformFloat4( "globalinfo", cwg );

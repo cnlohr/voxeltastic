@@ -371,6 +371,69 @@ function CNGLCreate2DDataTexture( cngl, lname )
 	}
 }
 
+function CNGLCreate3DDataTexture( cngl, lname )
+{
+	CNGLCreateAsset.call( this, cngl, lname );
+	this._type = "Texture3DAsset";
+	if( cngl.assetstack[this._type] == null )
+		cngl.assetstack[this._type] = [];
+
+	this.texture = null;
+	this.textureloc = 0;
+
+	this.destroy = function()
+	{
+		this.cngl.gl.deleteTexture( this.texture );
+	}
+
+	this.create = function( x, y, z, buffer, format, dtype )
+	{
+		var gl = this.cngl.gl;
+
+		if( this.texture )
+			this.destroy();
+
+		this.texture = gl.createTexture();
+
+
+		if( dtype == gl.FLOAT )
+		{
+			if (!gl.getExtension('OES_texture_float'))
+			{
+				console.log( "OES_texture_float not supported.\n" );
+			} 
+		}
+
+
+		gl.bindTexture(gl.TEXTURE_3D, this.texture);
+
+		gl.texImage3D( gl.TEXTURE_3D, 0, format,  x, y, z, format,  dtype, buffer );
+
+//		gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+//		gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+		gl.bindTexture(gl.TEXTURE_3D, null);
+
+	}
+
+	this.activate = function()
+	{
+		var gl = this.cngl.gl;
+		gl.activeTexture(gl.TEXTURE0 + this.textureloc);
+	        gl.bindTexture(gl.TEXTURE_3D, this.texture);
+		gl.activeTexture(gl.TEXTURE0);
+		this.cngl.activetextures[this.textureloc] = this;
+	}
+	this.deactivate = function()
+	{
+		var gl = this.cngl.gl;
+		gl.activeTexture(gl.TEXTURE0 + this.textureloc);
+	        gl.bindTexture(gl.TEXTURE_3D, null );
+//		this.cngl.activetextures[this.textureloc] = null;
+	}
+}
+
 function CNGLCreateShaderAsset( cngl, lname )
 {
 	CNGLCreateAsset.call( this, cngl, lname );
