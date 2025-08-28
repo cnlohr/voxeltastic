@@ -2,7 +2,7 @@
 precision mediump float;
 #endif
 
-uniform sampler2D geotex;
+uniform sampler3D geotex;
 uniform sampler2D dentex;
 
 uniform vec4 globalinfo;

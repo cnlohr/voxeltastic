@@ -407,7 +407,7 @@ function CNGLCreate3DDataTexture( cngl, lname )
 
 		gl.bindTexture(gl.TEXTURE_3D, this.texture);
 
-		gl.texImage3D( gl.TEXTURE_3D, 0, format,  x, y, z, format,  dtype, buffer );
+		gl.texImage3D( gl.TEXTURE_3D, 0, format, x, y, z, 0, format,  dtype, buffer );
 
 //		gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 //		gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
