@@ -4,7 +4,7 @@
 precision mediump float;
 #endif
 
-layout(location = 0) out vec4 gl_FragColor;
+layout(location = 0) out vec4 fragColor;
 	
 uniform highp sampler3D geotex;
 uniform highp sampler2D dentex;
@@ -208,7 +208,7 @@ void main()
 			UpdateSoFar();
 		}
 	}
-	gl_FragColor = vec4( mix( vec3( .1, .1, .1 ), sofarcolor.rgb, sofarcolor.a ), 1. );
+	fragColor = vec4( mix( vec3( .1, .1, .1 ), sofarcolor.rgb, sofarcolor.a ), 1. );
 
 }
 
