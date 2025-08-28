@@ -127,6 +127,9 @@ function pageloadfile( fil )
 	MAPZ = sz;
 
     fr = new FileReader();
+	fr.onerror = () => {
+		document.getElementById("fileloadstatus").innerHTML = "Error " + fr.error;
+	};
     fr.onload = fileloadblob;
     fr.readAsBinaryString(file);
 }
