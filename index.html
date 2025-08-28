@@ -291,7 +291,7 @@ function pointerlock( lock, element )
 		<TR><TD>Max Steps:</TD><TD><INPUT type=number id=maxsteps value=256></TD><TD>Max Distance:</TD><TD><INPUT type=number id=maxdist value=10></TD></TR>
 		<TR><TD>Is an RGBA map:</TD><TD><INPUT type=checkbox id=isrgba></TD><TD>FlipXZ:</TD><TD><INPUT type=checkbox id=flipxz></TD></TR>
 		<TR><TD>16-Bit:</TD><TD><INPUT type=checkbox id=is16bit></TD><TD>LE:</TD><TD><INPUT type=checkbox id=is16bitlittlendian></TD></TR>
-		<TR><TD>Data File</TD><TD><INPUT type=file name=mapdata onchange=pageloadfile(this)></TD></TR>
+		<TR><TD>Data File</TD><TD><INPUT type=file name=mapdata onclick="this.value=null;" onchange=pageloadfile(this)></TD></TR>
 		<TR><TD><input type=submit value="Cancel" onclick="document.getElementById('popover').style.display='none';"></TD><TD><div id=fileloadstatus></div></TD></TR>
 		</TABLE>
 	</div>
