@@ -4,6 +4,8 @@
 precision mediump float;
 #endif
 
+layout(location = 0) out vec4 gl_FragColor;
+	
 uniform highp sampler3D geotex;
 uniform highp sampler2D dentex;
 
@@ -36,9 +38,9 @@ vec3 lastnorm;
 vec4  AtCell( vec3 pos )
 {
 	pos /= scale.xyz;
-	vec4 v = texture3D( geotex, vec2( invtexsize.x * pos.x, invtexsize.y * pos.y, invtexsize.z * pos.z ) );
+	vec4 v = texture( geotex, vec3( invtexsize.x * pos.x, invtexsize.y * pos.y, invtexsize.z * pos.z ) );
 	lastnorm = normalize((v.xyz-0.5)*2.0);
-	return texture2D( dentex, vec2( v.a*255.5/256.0, 0.0 ) );
+	return texture( dentex, vec2( v.a*255.5/256.0, 0.0 ) );
 }
 
 bool already_hit;
