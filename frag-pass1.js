@@ -172,7 +172,7 @@ void Intersect( int axis, float dalong, vec2 minhit, vec2 maxhit )
 
 void main()
 {
-	maxsteps = stepsdist.x;
+	maxsteps = int(stepsdist.x);
 	maxdist = stepsdist.y;
 
 	already_hit = false;
