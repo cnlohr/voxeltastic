@@ -93,8 +93,7 @@ function pageloadfile( fil )
 
 	maxstepsv = Number( document.getElementById("maxsteps").value );
 	maxdistv = Number( document.getElementById("maxdist").value );
-	//Most of this is for the camera.
-	var tt = cwg.uniforms["globalinfo"].x += deltaTime;
+
 	actualtime += tt;
 	
 	flipxzv = document.getElementById("flipxz").checked;
