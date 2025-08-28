@@ -24,17 +24,17 @@ var lastheight = 0;
 var lastmid = 0;
 var lastmxd = 0;
 var lastrec = 0;
-var scalex = 1;
-var scaley = 1;
-var scalez = 1;
+var scalexv = 1;
+var scaleyv = 1;
+var scalezv = 1;
 
-var flipxz = false;
-var is16bit = false;
-var is16bitlittlendian = false;
+var flipxzv = false;
+var is16bitv = false;
+var is16bitlittlendianv = false;
 
 var fr;
 
-var isrgba = false;
+var isrgbav = false;
 
 function fileloadblob()
 {
@@ -45,10 +45,10 @@ function fileloadblob()
 	er = {};
 	er.response = [];
 
-	if( is16bit )
+	if( is16bitv )
 	{
 		for (n = 0; n < res.length; n+=2 ) {
-			er.response.push( res.charCodeAt(n + (is16bitlittleendian?1:0)) );
+			er.response.push( res.charCodeAt(n + (is16bitlittleendianv?1:0)) );
 		}
 	}
 	else
@@ -57,7 +57,7 @@ function fileloadblob()
 			er.response.push( res.charCodeAt(n) );
 		}
 	}
-	for ( ; n < MAPX*MAPY*MAPZ*(isrgba?4:1)*(is16bit?2:1); ++n) {
+	for ( ; n < MAPX*MAPY*MAPZ*(isrgba?4:1)*(is16bitv?2:1); ++n) {
 		er.response.push( 0 );
 	}
 	
@@ -84,14 +84,14 @@ function pageloadfile( fil )
 	var sx = Number( document.getElementById("smapx").value );
 	var sy = Number( document.getElementById("smapy").value );
 	var sz = Number( document.getElementById("smapz").value );
-	scalex = Number( document.getElementById("scalex").value );
-	scaley = Number( document.getElementById("scaley").value );
-	scalez = Number( document.getElementById("scalez").value );
-	flipxz = document.getElementById("flipxz").checked;
-	is16bit = document.getElementById("is16bit").checked;
-	is16bitlittlendian = document.getElementById("is16bitlittlendian").checked;
+	scalexv = Number( document.getElementById("scalex").value );
+	scaleyv = Number( document.getElementById("scaley").value );
+	scalezv = Number( document.getElementById("scalez").value );
+	flipxzv = document.getElementById("flipxz").checked;
+	is16bitv = document.getElementById("is16bit").checked;
+	is16bitlittlendianv = document.getElementById("is16bitlittlendian").checked;
 	
-	if( sx < 1 || sy < 1 || sz < 1 || Math.abs(scalex)<0.000001 || Math.abs(scaley)<0.000001 || Math.abs(scalez)<0.000001 )
+	if( sx < 1 || sy < 1 || sz < 1 || Math.abs(scalexv)<0.000001 || Math.abs(scaleyv)<0.000001 || Math.abs(scalezv)<0.000001 )
 	{
 		document.getElementById("fileloadstatus").innerHTML = "Invalid size/scale";
 		return;
@@ -101,16 +101,17 @@ function pageloadfile( fil )
 	console.log( file );
 	document.getElementById("fileloadstatus").innerHTML = "Loading " + file.name + " / " + sx + ", " + sy + ", " + sz;
 
-	isrgba = document.getElementById("isrgba").checked;
-	console.log( "isrgba: " + isrgba );
-	var exsize = sx * sy * sz * (isrgba?4:1) * (is16bit?2:1);
+	isrgbav = document.getElementById("isrgba").checked;
+	console.log( "isrgba: " + isrgbav );
+	console.log( "is16bit: " + is16bitv );
+	console.log( "is16bitlittlendian: " + is16bitlittlendian );
+	var exsize = sx * sy * sz * (isrgbav?4:1) * (is16bitv?2:1);
 	if( exsize != file.size )
 	{
 		document.getElementById("fileloadstatus").innerHTML = "File length wrong.  Expected " + exsize + " Got " + file.size;
 	}
 	else
 		document.getElementById("fileloadstatus").innerHTML = "Loading.";
-
 
 	MAPX = sx;
 	MAPY = sy;
@@ -205,7 +206,7 @@ function LoadMap( e, xtreq )
 
 	game.geotex.data = new Uint8Array(MAPX * MAPY * MAPZ*4);
 	
-	if( isrgba )
+	if( isrgbav )
 	{
 		var index = 0;
 		for( var z = 0; z < MAPZ; z++ )
@@ -354,11 +355,11 @@ function GameUpdate( deltaTime )
 
 
 
-	if( flipxz )
+	if( flipxzv )
 	{
-		cwg.uniforms["at"].z = (MAPX*scalex)/2;
-		cwg.uniforms["at"].y = (MAPY*scaley)/2;
-		cwg.uniforms["at"].x = (MAPZ*scalez)/2;
+		cwg.uniforms["at"].z = (MAPX*scalexv)/2;
+		cwg.uniforms["at"].y = (MAPY*scaleyv)/2;
+		cwg.uniforms["at"].x = (MAPZ*scalezv)/2;
 		cwg.uniforms["eye"].z = Math.cos(rotx)*distto*Math.cos(roty)+cwg.uniforms["at"].x;
 		cwg.uniforms["eye"].y = Math.sin(rotx)*distto*Math.cos(roty)+cwg.uniforms["at"].y;
 		cwg.uniforms["eye"].x = distto*Math.sin(roty)+cwg.uniforms["at"].z;
@@ -368,9 +369,9 @@ function GameUpdate( deltaTime )
 	}
 	else
 	{
-		cwg.uniforms["at"].x = (MAPX*scalex)/2;
-		cwg.uniforms["at"].y = (MAPY*scaley)/2;
-		cwg.uniforms["at"].z = (MAPZ*scalez)/2;
+		cwg.uniforms["at"].x = (MAPX*scalexv)/2;
+		cwg.uniforms["at"].y = (MAPY*scaleyv)/2;
+		cwg.uniforms["at"].z = (MAPZ*scalezv)/2;
 		cwg.uniforms["eye"].x = Math.cos(rotx)*distto*Math.cos(roty)+cwg.uniforms["at"].x;
 		cwg.uniforms["eye"].y = Math.sin(rotx)*distto*Math.cos(roty)+cwg.uniforms["at"].y;
 		cwg.uniforms["eye"].z = distto*Math.sin(roty)+cwg.uniforms["at"].z;
@@ -382,24 +383,24 @@ function GameUpdate( deltaTime )
 	var ar = cwg.width/cwg.height;
 	cwg.uniforms["aspect"].x = ar*.6;
 	cwg.uniforms["aspect"].y = 0.6;
-	cwg.uniforms["aspect"].z = isrgba?1.0:0.0;
+	cwg.uniforms["aspect"].z = isrgbav?1.0:0.0;
 
 	cwg.uniforms["invtexsize"].x = 1./MAPX;
 	cwg.uniforms["invtexsize"].y = 1./MAPY;
 	cwg.uniforms["invtexsize"].z = 1./MAPZ;
-	cwg.uniforms["texsize"].x = MAPX*scalex;
-	cwg.uniforms["texsize"].y = MAPY*scaley;
-	cwg.uniforms["texsize"].z = MAPZ*scalez;
-	cwg.uniforms["scale"].x = scalex;
-	cwg.uniforms["scale"].y = scaley;
-	cwg.uniforms["scale"].z = scalez;
-	cwg.uniforms["scale"].w = flipxz?1.0:0.0;
+	cwg.uniforms["texsize"].x = MAPX*scalexv;
+	cwg.uniforms["texsize"].y = MAPY*scaleyv;
+	cwg.uniforms["texsize"].z = MAPZ*scalezv;
+	cwg.uniforms["scale"].x = scalexv;
+	cwg.uniforms["scale"].y = scaleyv;
+	cwg.uniforms["scale"].z = scalezv;
+	cwg.uniforms["scale"].w = flipxzv?1.0:0.0;
 
 	var mi = Number( document.getElementById( "mindd" ).value );
 	var mx = Number( document.getElementById( "maxdd" ).value );
 	var rec = document.getElementById( "recolor" ).checked;
 
-	if( isrgba )
+	if( isrgbav )
 	{
 		cwg.uniforms["minmax"].x = mi/255.0;
 		cwg.uniforms["minmax"].y = mx/255.0;
