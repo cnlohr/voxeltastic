@@ -1,15 +1,20 @@
+#version 300 es
+
 #ifdef GL_ES
 precision mediump float;
 #endif
 
-uniform sampler2D geotex;
-uniform vec4 minmax;
+layout(location = 0) out vec4 fragColor;
+	
+uniform highp sampler3D geotex;
+uniform highp sampler2D dentex;
+
 uniform vec4 globalinfo;
 float Rmindist;
-varying vec3 v_ray;
+in highp vec3 v_ray;
 float minr, maxr;
 
-varying vec2 v_texCoord;
+in highp vec2 v_texCoord;
 uniform vec4 eye;
 
 vec3 color;
@@ -32,7 +37,7 @@ float totaltravel;
 vec4  AtCell( vec3 pos )
 {
 	pos /= scale.xyz;
-	vec4 v = texture2D( geotex, vec2( invtexsize.x * invtexsize.y * pos.x + invtexsize.y * pos.y, invtexsize.z * pos.z ) );
+	vec4 v = texture( geotex, vec3( invtexsize.x * pos.x, invtexsize.y * pos.y, invtexsize.z * pos.z ) );
 	v.a = (v.a-minmax.x)/(minmax.y - minmax.x);
 	v.a = max(v.a,0.0);
 	return v;
@@ -202,7 +207,7 @@ void main()
 			UpdateSoFar();
 		}
 	}
-	gl_FragColor = vec4( mix( vec3( .1, .1, .1 ), sofarcolor.rgb, sofarcolor.a ), 1. );
+	fragColor = vec4( mix( vec3( .1, .1, .1 ), sofarcolor.rgb, sofarcolor.a ), 1. );
 
 }
 
